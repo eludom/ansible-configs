@@ -1,0 +1,52 @@
+#+TITLE: System Configuration Snippits
+#+DATE: <2015-05-20 07:21:46 Wednesday>
+#+AUTHOR: George M Jones
+#+EMAIL: gmj@pobox.com
+
+This is a list of system configuration snippits that I've created.
+
+* Ubuntu Configuration Snippits
+** Set the hostname on an ubuntu system
+
+   This block sets the hostname on a new new ubutnu system.
+   It assumes the first occurance of "ubuntu" in /etc/hosts is the
+   current hostname, and sets it to ${hostname}
+
+   #+begin_src sh  :results output :exports both :var NEWNAME="octo" :dir /sudo:: 
+   exec 2>&1;date;set -e; set -u; set +x
+
+   hostname=${NEWNAME}  || true
+   sh -c 'echo ${hostname} > /etc/hostname'  || true
+   hostname ${hostname}  || true
+   cat /etc/hosts | sed "s/127.0.1.1\t.*/127.0.1.1	${hostname}/" > /tmp/hosts.$$  || true
+   mv /etc/hosts /etc/hosts.`date '+%Y%m%d:%H:%M:%S'`  || true
+   mv /tmp/hosts.$$ /etc/hosts  || true
+   chmod 644 /etc/hosts || true
+
+   echo
+   echo hostname
+   hostname
+
+   echo /etc/hosts
+   cat /etc/hosts
+  
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   Wed May 20 07:13:04 EDT 2015
+
+   hostname
+   octo
+   /etc/hosts
+   127.0.0.1	localhost
+   127.0.1.1      octobar
+
+   # The following lines are desirable for IPv6 capable hosts
+   ::1     ip6-localhost ip6-loopback
+   fe00::0 ip6-localnet
+   ff00::0 ip6-mcastprefix
+   ff02::1 ip6-allnodes
+   ff02::2 ip6-allrouters
+#+end_example
+
