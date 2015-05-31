@@ -1,5 +1,5 @@
-#+TITLE: Experiments with Ansible
-#+DATE: <2015-05-31 17:22:03 Sunday>
+#+TITLE: Ansible Installation and SSH Client setup
+#+DATE: <2015-05-31 17:31:43 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 

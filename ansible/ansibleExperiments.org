@@ -1,5 +1,5 @@
-#+TITLE: Ansible Setup Scripts
-#+DATE: <2015-05-31 17:15:54 Sunday>
+#+TITLE: Ansible Experiments and Learning
+#+DATE: <2015-05-31 17:32:56 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -44,7 +44,4 @@
   - May move to EC2 instances later
 
 * How
-  - Start with a freshly installed Ubuntu 14.04 system
-  - Set up SSH and root password on managed system(s)
-  - Install ansible on a management system
-
+  - Ansible setup :: See https://github.com/eludom/config/blob/master/ansible/ansibleSetup.org
