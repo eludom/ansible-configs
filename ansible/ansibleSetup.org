@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-05-31 17:31:43 Sunday>
+#+DATE: <2015-05-31 19:45:31 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -14,7 +14,9 @@
   Getting the SSH setup repeatably right is harder than is should be.
 
 * Who
-  Some material borrowed from https://serversforhackers.com/an-ansible-tutorial
+  Some material borrowed from
+  http://www.hashbangcode.com/blog/ansible-ssh-setup-playbook and
+  https://serversforhackers.com/an-ansible-tutorial 
 
 * When
   - One time set up (ansible master)
@@ -630,11 +632,11 @@ END
 
    #+RESULTS:
    #+begin_example
-   Sun May 31 17:13:11 EDT 2015
+   Sun May 31 17:52:05 EDT 2015
    + cd /home/george/ansible
    + ansible -i hosts.sshkeys all -s -m shell -a date
    192.168.1.100 | success | rc=0 >>
-   Sun May 31 17:13:15 EDT 2015
+   Sun May 31 17:52:14 EDT 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
    192.168.1.100 | success | rc=0 >>
