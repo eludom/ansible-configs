@@ -1,5 +1,5 @@
 #+TITLE: Ansible nginx example
-#+DATE: <2015-05-31 20:09:06 Sunday>
+#+DATE: <2015-05-31 20:20:07 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -52,20 +52,22 @@
    #+NAME: sshKeyName
    | ansible |
 
+   #+NAME: serverIP
+   | 192.168.1.100 |
+
 ** Variables
 
    The scripts below use the following variables.  Your mileage may
    vary.   Source this if executing the scripts below.
 
-   #+begin_src sh  :results output :exports results  :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password
+   #+begin_src sh  :results output :exports results  :var ansibleDir=ansibleDir sshKeyName=sshKeyName 
    exec 2>&1;set -e; set -u; set +x; echo "# `date`"
    echo export ansibleDir=${ansibleDir}
    echo export sshKeyName=${sshKeyName}
    #+end_src
 
    #+RESULTS:
-   : # Sun May 31 08:33:09 EDT 2015
-   : export password=changethis
+   : # Sun May 31 20:10:48 EDT 2015
    : export ansibleDir=/home/george/ansible
    : export sshKeyName=ansible
 
@@ -135,16 +137,29 @@
       cd ${ansibleDir}/roles
 
    done
+
+   cd ${ansibleDir}/roles
+   rm -f ssl
+   ln -s ansible-ssl-example ssl  # because the nginx example is looking for "ssl"
+   ls -l
    #+end_src
 
    #+RESULTS:
-   : Sun May 31 19:44:46 EDT 2015
-   : /home/george/ansible/roles
-   : Cloning into 'ansible-nginx'...
-   : /home/george/ansible/roles/ansible-ssl-example
-   : From github.com:Servers-for-Hackers/ansible-ssl-example
-   :  * branch            HEAD       -> FETCH_HEAD
-   : Already up-to-date.
+   #+begin_example
+   Sun May 31 20:14:47 EDT 2015
+   /home/george/ansible/roles/ansible-nginx
+   From github.com:Servers-for-Hackers/ansible-nginx
+    * branch            HEAD       -> FETCH_HEAD
+   Already up-to-date.
+   /home/george/ansible/roles/ansible-ssl-example
+   From github.com:Servers-for-Hackers/ansible-ssl-example
+    * branch            HEAD       -> FETCH_HEAD
+   Already up-to-date.
+   total 8
+   drwxrwxr-x 9 george george 4096 May 31 19:44 ansible-nginx
+   drwxrwxr-x 6 george george 4096 May 31 20:12 ansible-ssl-example
+   lrwxrwxrwx 1 george george   19 May 31 20:14 ssl -> ansible-ssl-example
+#+end_example
 
 
 ** Make sure roles_path is correct in /etc/ansible/ansible.cfg
@@ -182,12 +197,6 @@
    : 
    : [web]  
    : 192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
-
-
-https://github.com/Servers-for-Hackers/ansible-nginx
-
-
-ansible-playbook -s server.yml
    
 ** Create a server.yml file naming the host groups and referencing the role
    #+begin_src sh  :results output :exports code
@@ -219,8 +228,8 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 20:07:57 EDT 2015
-   # Sun May 31 20:07:57 EDT 2015
+   + echo '#' Sun May 31 20:15:13 EDT 2015
+   # Sun May 31 20:15:13 EDT 2015
    + cd /home/george/ansible
    + ansible-playbook -s server.yml
 
@@ -267,5 +276,53 @@ END
    192.168.1.100              : ok=10   changed=0    unreachable=1    failed=0   
 
    + true
+#+end_example
+
+** Test the web server
+   #+begin_src sh  :results output :exports coe  :var serverIP=serverIP
+   exec 2>&1;date;set -e; set -u; set -x
+
+   curl http://${serverIP}
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   Sun May 31 20:20:00 EDT 2015
+   + curl http://192.168.1.100
+     % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+				    Dload  Upload   Total   Spent    Left  Speed
+     0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   867  100   867    0     0   611k      0 --:--:-- --:--:-- --:--:--  846k
+   <!DOCTYPE html>
+   <html>
+   <head>
+   <title>Welcome to nginx on Debian!</title>
+   <style>
+       body {
+	   width: 35em;
+	   margin: 0 auto;
+	   font-family: Tahoma, Verdana, Arial, sans-serif;
+       }
+   </style>
+   </head>
+   <body>
+   <h1>Welcome to nginx on Debian!</h1>
+   <p>If you see this page, the nginx web server is successfully installed and
+   working on Debian. Further configuration is required.</p>
+
+   <p>For online documentation and support please refer to
+   <a href="http://nginx.org/">nginx.org</a></p>
+
+   <p>
+	 Please use the <tt>reportbug</tt> tool to report bugs in the
+	 nginx package with Debian. However, check <a
+	 href="http://bugs.debian.org/cgi-bin/pkgreport.cgi?ordering=normal;archive=0;src=nginx;repeatmerged=0">existing
+	 bug reports</a> before reporting a new bug.
+   </p>
+
+   <p><em>Thank you for using debian and nginx.</em></p>
+
+
+   </body>
+   </html>
 #+end_example
 
