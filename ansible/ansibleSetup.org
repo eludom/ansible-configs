@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-05-31 19:45:31 Sunday>
+#+DATE: <2015-06-01 07:18:15 Monday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -48,12 +48,16 @@
    #+end_src
 
    #+RESULTS: ansibleDir
-   : /home/george/ansible
+   : /home/gmj/ansible
 
    sshKeyName is the base name of the ssh key.
 
    #+NAME: sshKeyName
-   | ansible |
+   | gejones14.pem |
+
+
+   #+NAME: clientIP
+   | 10.97.22.138 |
 
 ** Variables
 
@@ -68,14 +72,15 @@
    #+end_src
 
    #+RESULTS:
-   : # Sun May 31 08:33:09 EDT 2015
+   : # Mon Jun  1 07:16:47 EDT 2015
    : export password=changethis
-   : export ansibleDir=/home/george/ansible
-   : export sshKeyName=ansible
+   : export ansibleDir=/home/gmj/ansible
+   : export sshKeyName=gejones14.pem
 
 
-** [4/4] Manual configuration of systems to be managed
+** [5/5] Manual configuration of systems to be managed
    There are a few manual steps needed to be done on managed hosts:
+*** DONE Install Base System By hand
 *** DONE Update packages
 
      This is just good hygiene:
@@ -88,7 +93,7 @@
      Also install VM tools if appropriate (VMWare, VirtualBox, etc).
      At this point, I snapshot the VM.
 
-*** DONE Set the root password
+*** CANCELED Set the root password
 
      Set the root password to something we know because we're going to
      be messing with the =/etc/sudoers= file, and things can go
@@ -98,7 +103,7 @@
      sudo passwd root 
      #+end_example
 
-*** DONE Install ssh(1) on the managed system
+*** CANCELED Install ssh(1) on the managed system
 
    ssh(1) is the /sine non qua/ of ansible.  You have to be able to
    ssh, as root to all you victims, er, managed boxes.  To use
@@ -108,7 +113,7 @@
    sudo apt-get -y install openssh-server   
    #+end_example
 
-*** DONE Edit /etc/ssh/sshd_conf to allow root login (ick !)
+*** CANCELED Edit /etc/ssh/sshd_conf to allow root login (ick !)
    #+begin_example
    sudo sed -i '/^PermitRootLogin/d;$aPermitRootLogin yes' /etc/ssh/sshd_config
    sudo service ssh restart
@@ -120,7 +125,7 @@
 
 *** DONE Install Ansible
 
-   First, install Ansible on the host you intend to use as the mastera
+   First, install Ansible on the host you intend to use as the master
 
    #+begin_src sh  :results output :exports code :dir /sudo::
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
@@ -132,169 +137,176 @@
 
    #+RESULTS:
    #+begin_example
-   # Sun May 31 16:28:12 EDT 2015
-   gpg: keyring `/tmp/tmpwmo80lrc/secring.gpg' created
-   gpg: keyring `/tmp/tmpwmo80lrc/pubring.gpg' created
+   # Mon Jun 1 07:01:04 EDT 2015
+   gpg: keyring `/tmp/tmp9x5w49ta/secring.gpg' created
+   gpg: keyring `/tmp/tmp9x5w49ta/pubring.gpg' created
    gpg: requesting key 7BB9C367 from hkp server keyserver.ubuntu.com
-   gpg: /tmp/tmpwmo80lrc/trustdb.gpg: trustdb created
+   gpg: /tmp/tmp9x5w49ta/trustdb.gpg: trustdb created
    gpg: key 7BB9C367: public key "Launchpad PPA for Ansible, Inc." imported
    gpg: Total number processed: 1
    gpg:               imported: 1  (RSA: 1)
    OK
    0% [Working]            Ign http://us.archive.ubuntu.com trusty InRelease
-               4% [Waiting for headers] [Connecting to security.ubuntu.com (91.189.92.200)] [C                                                                               Ign http://dl.google.com stable InRelease
-   7% [Waiting for headers] [Connecting to security.ubuntu.com (91.189.92.200)] [C                                                                               Ign http://us.archive.ubuntu.com trusty-updates InRelease
-   10% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Ign http://dl.google.com stable InRelease
-   12% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Hit http://download.virtualbox.org trusty InRelease
-   24% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti24% [InRelease gpgv 5,637 B] [Waiting for headers] [Waiting for headers] [Waiti                                                                               Ign http://us.archive.ubuntu.com trusty-backports InRelease
-   28% [InRelease gpgv 5,637 B] [Waiting for headers] [Waiting for headers] [Waiti                                                                               Hit http://dl.google.com stable Release.gpg
-   32% [InRelease gpgv 5,637 B] [Waiting for headers] [Waiting for headers] [Waiti30% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Hit http://us.archive.ubuntu.com trusty Release.gpg
-   33% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br]                                                                               Hit http://dl.google.com stable Release.gpg
-   36% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Get:1 http://us.archive.ubuntu.com trusty-updates Release.gpg [933 B]
-   98% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Ign http://extras.ubuntu.com trusty InRelease
-   98% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br]                                                                               Ign http://security.ubuntu.com trusty-security InRelease
-   98% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br]                                                                               Ign http://linux.dropbox.com trusty InRelease
-   98% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Hit http://download.virtualbox.org trusty/contrib amd64 Packages
-   98% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Hit http://us.archive.ubuntu.com trusty-backports Release.gpg
-                                                                                  Ign http://ppa.launchpad.net trusty InRelease
-                                                                                  Hit http://dl.google.com stable Release
-   98% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti98% [Release gpgv 1,347 B] [Waiting for headers] [Waiting for headers] [Waiting100% [Release gpgv 1,347 B] [Waiting for headers] [Waiting for headers] [Waitin100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect                                                                               Hit http://us.archive.ubuntu.com trusty Release
-   100% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br100% [Release gpgv 58.5 kB] [Waiting for headers] [Waiting for headers] [Waitin99% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Hit http://dl.google.com stable Release
-   99% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti99% [Release gpgv 1,338 B] [Waiting for headers] [Waiting for headers] [Waiting99% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connecti                                                                               Get:2 http://us.archive.ubuntu.com trusty-updates Release [63.5 kB]
-                                                                                  Hit http://download.virtualbox.org trusty/contrib i386 Packages
-                                                                                  Hit http://dl.google.com stable/main amd64 Packages
-   27% [2 Release 14.2 kB/63.5 kB 22%] [Waiting for headers] [Waiting for headers]                                                                               Hit http://security.ubuntu.com trusty-security Release.gpg
-                                                                                  Hit http://extras.ubuntu.com trusty Release.gpg
-   27% [2 Release 14.2 kB/63.5 kB 22%] [Connecting to cran.fiocruz.br (157.86.152.27% [Packages 3,260 B] [2 Release 14.2 kB/63.5 kB 22%] [Connecting to cran.fioc31% [2 Release 14.2 kB/63.5 kB 22%] [Connecting to cran.fiocruz.br (157.86.152.31% [Packages 4,117 B] [2 Release 14.2 kB/63.5 kB 22%] [Waiting for headers] [W34% [2 Release 14.2 kB/63.5 kB 22%] [Waiting for headers] [Waiting for headers]                                                                               Hit http://linux.dropbox.com trusty Release.gpg
-   56% [2 Release 30.1 kB/63.5 kB 47%] [Waiting for headers] [Waiting for headers]                                                                               Hit http://ppa.launchpad.net trusty Release.gpg
-   56% [2 Release 30.1 kB/63.5 kB 47%] [Waiting for headers] [Waiting for headers]100% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br100% [2 Release gpgv 63.5 kB] [Waiting for headers] [Waiting for headers] [Wait100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect                                                                               Hit http://security.ubuntu.com trusty-security Release
-   100% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br100% [Release gpgv 63.5 kB] [Waiting for headers] [Waiting for headers] [Connec                                                                               Hit http://extras.ubuntu.com trusty Release
-   100% [Release gpgv 63.5 kB] [Waiting for headers] [Connecting to cran.fiocruz.b100% [Waiting for headers] [Connecting to cran.fiocruz.br (157.86.152.35)] [Wai100% [Release gpgv 11.9 kB] [Waiting for headers] [Connecting to cran.fiocruz.b                                                                               Hit http://us.archive.ubuntu.com trusty-backports Release
-   100% [Release gpgv 11.9 kB] [Waiting for headers] [Waiting for headers] [Connec100% [Waiting for headers] [Waiting for headers] [Connecting to cran.fiocruz.br100% [Release gpgv 63.5 kB] [Waiting for headers] [Waiting for headers] [Connec                                                                               Hit http://linux.dropbox.com trusty Release
-   100% [Release gpgv 63.5 kB] [Waiting for headers] [Waiting for headers] [Waitin100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect100% [Release gpgv 2,601 B] [Waiting for headers] [Waiting for headers] [Waitin100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect                                                                               Hit http://ppa.launchpad.net trusty Release
-   100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect100% [Release gpgv 15.1 kB] [Waiting for headers] [Waiting for headers] [Waitin100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect                                                                               Hit http://us.archive.ubuntu.com trusty/main Sources
-   100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://us.archive.ubuntu.com trusty/restricted Sources
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Connecting                                                                               Hit http://us.archive.ubuntu.com trusty/universe Sources
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Connecting                                                                               Hit http://security.ubuntu.com trusty-security/main Sources
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Connecting                                                                               Hit http://extras.ubuntu.com trusty/main Sources
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://linux.dropbox.com trusty/main amd64 Packages
+               6% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conne                                                                               Ign http://us.archive.ubuntu.com trusty-updates InRelease
+   11% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conn                                                                               Ign http://us.archive.ubuntu.com trusty-backports InRelease
+   15% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conn                                                                               Hit http://us.archive.ubuntu.com trusty Release.gpg
+   33% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conn                                                                               Get:1 http://us.archive.ubuntu.com trusty-updates Release.gpg [933 B]
+   99% [1 Release.gpg 933 B/933 B 100%] [Connecting to security.ubuntu.com] [Conne99% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conn                                                                               Hit http://us.archive.ubuntu.com trusty-backports Release.gpg
+   99% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conn                                                                               Hit http://us.archive.ubuntu.com trusty Release
+   99% [Connecting to security.ubuntu.com] [Connecting to extras.ubuntu.com] [Conn99% [Release gpgv 58.5 kB] [Waiting for headers] [Connecting to security.ubuntu97% [Waiting for headers] [Connecting to security.ubuntu.com (91.189.92.200)] [                                                                               Get:2 http://us.archive.ubuntu.com trusty-updates Release [63.5 kB]
+   5% [2 Release 2,602 B/63.5 kB 4%] [Connecting to security.ubuntu.com (91.189.92                                                                               Ign http://ppa.launchpad.net trusty InRelease
+   55% [2 Release 34.5 kB/63.5 kB 54%] [Connecting to security.ubuntu.com (91.189.100% [Connecting to security.ubuntu.com (91.189.92.200)] [Connecting to extras.100% [2 Release gpgv 63.5 kB] [Waiting for headers] [Connecting to security.ubu100% [Waiting for headers] [Connecting to security.ubuntu.com (91.189.92.200)]                                                                                Hit http://us.archive.ubuntu.com trusty-backports Release
+   100% [Connecting to security.ubuntu.com (91.189.92.200)] [Connecting to extras.100% [Release gpgv 63.5 kB] [Waiting for headers] [Connecting to security.ubunt100% [Waiting for headers] [Connecting to security.ubuntu.com (91.189.92.200)]                                                                                Hit http://us.archive.ubuntu.com trusty/main Sources
+   100% [Connecting to security.ubuntu.com (91.189.92.200)] [Connecting to extras.100% [Sources 5,000 kB] [Waiting for headers] [Connecting to security.ubuntu.co                                                                               Hit http://us.archive.ubuntu.com trusty/restricted Sources
+   100% [Sources 5,000 kB] [Waiting for headers] [Connecting to extras.ubuntu.com                                                                                Hit http://us.archive.ubuntu.com trusty/universe Sources
    100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://us.archive.ubuntu.com trusty/multiverse Sources
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://ppa.launchpad.net trusty/main amd64 Packages
+   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Get:3 http://ppa.launchpad.net trusty Release.gpg [836 B]
+   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Ign http://cran.case.edu trusty/ InRelease
    100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://us.archive.ubuntu.com trusty/main amd64 Packages
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Get:3 https://get.docker.com docker InRelease
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://us.archive.ubuntu.com trusty/restricted amd64 Packages
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://security.ubuntu.com trusty-security/restricted Sources
-   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting100% [Sources 22.9 kB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://extras.ubuntu.com trusty/main amd64 Packages
+   100% [Sources 5,000 kB] [Waiting for headers] [Waiting for headers] [Connecting100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect100% [Sources 22.9 kB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/restricted amd64 Packages
    100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/universe amd64 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://linux.dropbox.com trusty/main i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/multiverse amd64 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://ppa.launchpad.net trusty/main i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/main i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security/universe Sources
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://extras.ubuntu.com trusty/main i386 Packages
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Ign http://security.ubuntu.com trusty-security InRelease
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Get:4 http://cran.case.edu trusty/ Release.gpg [490 B]
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Ign http://extras.ubuntu.com trusty InRelease
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Hit http://us.archive.ubuntu.com trusty/multiverse amd64 Packages
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Hit http://us.archive.ubuntu.com trusty/main i386 Packages
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Get:5 http://ppa.launchpad.net trusty Release [15.1 kB]
    100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/restricted i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Ign http://cran.fiocruz.br trusty/ InRelease
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Ign https://get.docker.com docker InRelease
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://ppa.launchpad.net trusty/main Translation-en
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security/multiverse Sources
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Get:6 http://cran.case.edu trusty/ Release [3,703 B]
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [6 Release gpgv 3,703 B] [Waiting for headers] [Waiting 100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security Release.gpg
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://extras.ubuntu.com trusty Release.gpg
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://cran.case.edu trusty/ Packages
    100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/universe i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Ign http://download.virtualbox.org trusty/contrib Translation-en_US
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/multiverse i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://dl.google.com stable/main i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Ign http://download.virtualbox.org trusty/contrib Translation-en
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security/main amd64 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/main Translation-en
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://dl.google.com stable/main amd64 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/multiverse Translation-en
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Get:4 http://cran.fiocruz.br trusty/ Release.gpg [490 B]
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://dl.google.com stable/main i386 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security/restricted amd64 Packages
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Hit http://us.archive.ubuntu.com trusty/multiverse i386 Packages
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting 100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [5 Release gpgv 15.1 kB] [Waiting for headers] [Waiting 100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/main Translation-en
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Hit http://security.ubuntu.com trusty-security Release
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting 100% [Sources 27.9 MB] [Release gpgv 63.5 kB] [Waiting for headers] [Waiting fo100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://extras.ubuntu.com trusty Release
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [Release gpgv 11.9 kB] [Waiting for headers] [Waiting fo100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/multiverse Translation-en
    100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/restricted Translation-en
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/universe Translation-en
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security/universe amd64 Packages
-   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Get:5 http://us.archive.ubuntu.com trusty-updates/main Sources [206 kB]
-   96% [Sources 27.9 MB] [5 Sources 1,117 B/206 kB 1%] [Waiting for headers] [Wait                                                                               Get:6 http://cran.fiocruz.br trusty/ Release [3,703 B]
-   97% [Sources 27.9 MB] [5 Sources 63.4 kB/206 kB 31%] [Waiting for headers] [Wai                                                                               Hit http://security.ubuntu.com trusty-security/multiverse amd64 Packages
-   97% [Sources 27.9 MB] [5 Sources 63.4 kB/206 kB 31%] [Waiting for headers] [Wai                                                                               Hit https://get.docker.com docker Release.gpg
-   97% [Sources 27.9 MB] [5 Sources 63.4 kB/206 kB 31%] [Waiting for headers] [Wai                                                                               Hit http://security.ubuntu.com trusty-security/main i386 Packages
-   99% [Sources 27.9 MB] [5 Sources 140 kB/206 kB 68%] [Waiting for headers] [6 Re100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [5 Sources bzip2 0 B] [Sources 27.9 MB] [Waiting for headers] [Waiting for                                                                               Hit http://security.ubuntu.com trusty-security/restricted i386 Packages
-   100% [5 Sources bzip2 0 B] [Sources 27.9 MB] [Waiting for headers] [Waiting for100% [5 Sources bzip2 0 B] [Sources 27.9 MB] [Waiting for headers] [Waiting for100% [5 Sources bzip2 0 B] [Sources 27.9 MB] [6 Release gpgv 3,703 B] [Waiting 100% [5 Sources bzip2 0 B] [Sources 27.9 MB] [Waiting for headers] [Waiting for                                                                               Get:7 http://us.archive.ubuntu.com trusty-updates/restricted Sources [3,433 B]
-   100% [5 Sources bzip2 0 B] [Sources 27.9 MB] [Waiting for headers] [Waiting for                                                                               Get:8 http://us.archive.ubuntu.com trusty-updates/universe Sources [118 kB]
-   98% [5 Sources bzip2 0 B] [Sources 27.9 MB] [8 Sources 1,117 B/118 kB 1%] [Wait98% [Sources 27.9 MB] [8 Sources 18.5 kB/118 kB 16%] [Waiting for headers] [Wai98% [7 Sources bzip2 0 B] [Sources 27.9 MB] [8 Sources 18.5 kB/118 kB 16%] [Wai98% [Sources 27.9 MB] [8 Sources 18.5 kB/118 kB 16%] [Waiting for headers] [Wai                                                                               Hit http://security.ubuntu.com trusty-security/universe i386 Packages
-   98% [Sources 27.9 MB] [8 Sources 18.5 kB/118 kB 16%] [Waiting for headers] [Wai100% [8 Sources 18.5 kB/118 kB 16%] [Waiting for headers] [Waiting for headers]100% [Sources 402 kB] [8 Sources 18.5 kB/118 kB 16%] [Waiting for headers] [Wai100% [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Waiting for headers]100% [Sources 0 B] [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Waitin100% [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Waiting for headers]100% [Packages 2,682 B] [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [W100% [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Waiting for headers]100% [Sources 711 kB] [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Wai                                                                               Ign http://linux.dropbox.com trusty/main Translation-en_US
-   100% [Sources 711 kB] [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Wai100% [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Waiting for headers]100% [Packages 652 B] [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Wai100% [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [Waiting for headers]100% [Packages 8,235 kB] [8 Sources 28.6 kB/118 kB 24%] [Waiting for headers] [                                                                               Ign http://dl.google.com stable/main Translation-en_US
-   100% [Packages 8,235 kB] [8 Sources 41.7 kB/118 kB 35%] [Waiting for headers] [                                                                               Ign http://dl.google.com stable/main Translation-en
-   100% [Packages 8,235 kB] [8 Sources 54.7 kB/118 kB 46%] [Waiting for headers] [                                                                               Ign http://extras.ubuntu.com trusty/main Translation-en_US
-   100% [Packages 8,235 kB] [8 Sources 54.7 kB/118 kB 46%] [Waiting for headers] [                                                                               Hit http://security.ubuntu.com trusty-security/multiverse i386 Packages
-   100% [Packages 8,235 kB] [8 Sources 70.6 kB/118 kB 60%] [Waiting for headers] [                                                                               Hit http://cran.fiocruz.br trusty/ Packages
-   100% [Packages 8,235 kB] [8 Sources 70.6 kB/118 kB 60%] [Waiting for headers] [                                                                               Ign http://dl.google.com stable/main Translation-en_US
-   100% [Packages 8,235 kB] [8 Sources 70.6 kB/118 kB 60%] [Waiting for headers] [                                                                               Ign http://linux.dropbox.com trusty/main Translation-en
-   100% [Packages 8,235 kB] [8 Sources 70.6 kB/118 kB 60%] [Waiting for headers] [                                                                               Hit https://get.docker.com docker Release
-   100% [Packages 8,235 kB] [8 Sources 86.5 kB/118 kB 73%] [Waiting for headers] [100% [Packages 8,235 kB] [Release gpgv 1,525 B] [8 Sources 86.5 kB/118 kB 73%] 100% [Packages 8,235 kB] [8 Sources 86.5 kB/118 kB 73%] [Waiting for headers] [                                                                               Ign http://dl.google.com stable/main Translation-en
-   100% [Packages 8,235 kB] [8 Sources 86.5 kB/118 kB 73%] [Waiting for headers] [                                                                               Ign http://extras.ubuntu.com trusty/main Translation-en
-   100% [Packages 8,235 kB] [8 Sources 105 kB/118 kB 89%] [Waiting for headers] [W                                                                               Hit http://security.ubuntu.com trusty-security/main Translation-en
-                                                                                  100% [Packages 8,235 kB] [8 Sources 118 kB/118 kB 100%] [Waiting for headers]                                                                             100% [Packages 8,235 kB] [Waiting for headers] [Waiting for headers]                                                                    100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f                                                                               Get:9 http://us.archive.ubuntu.com trusty-updates/multiverse Sources [5,152 B]
-   100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [9 Sources 2,568 B/5,152 B 50%] 100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f100% [Packages 8,235 kB] [Waiting for headers] [Waiting for headers] [Waiting f100% [9 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f100% [Packages 8,235 kB] [Waiting for headers] [Waiting for headers] [Waiting f                                                                               Get:10 http://us.archive.ubuntu.com trusty-updates/main amd64 Packages [507 kB]
-   99% [Packages 8,235 kB] [10 Packages 1,117 B/507 kB 0%] [Waiting for headers] [99% [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Waiting for headers]99% [Packages 184 kB] [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Wa99% [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Waiting for headers]99% [Sources 8,902 B] [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Wa99% [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Waiting for headers]99% [Packages 0 B] [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Waiti99% [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [Waiting for headers]99% [Packages 31.7 MB] [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [W                                                                               Hit http://security.ubuntu.com trusty-security/multiverse Translation-en
-   99% [Packages 31.7 MB] [10 Packages 19.9 kB/507 kB 4%] [Waiting for headers] [W                                                                               Hit http://security.ubuntu.com trusty-security/restricted Translation-en
-                                                                                  99% [Packages 31.7 MB] [10 Packages 108 kB/507 kB 21%] [Waiting for headers]                                                                            Hit https://get.docker.com docker/main amd64 Packages
-                                                                               99% [Packages 31.7 MB] [10 Packages 263 kB/507 kB 52%] [Waiting for headers] [W                                                                               Hit http://security.ubuntu.com trusty-security/universe Translation-en
-                                                                                  100% [Packages 31.7 MB] [10 Packages 388 kB/507 kB 77%] [Waiting for headers]                                                                             100% [Packages 31.7 MB] [Waiting for headers]                                             100% [10 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:11 http://us.archive.ubuntu.com trusty-updates/restricted amd64 Packages [11.8 kB]
-   100% [10 Packages bzip2 0 B] [Packages 31.7 MB] [11 Packages 0 B/11.8 kB 0%] [W100% [10 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:12 http://us.archive.ubuntu.com trusty-updates/universe amd64 Packages [279 kB]
-   99% [10 Packages bzip2 0 B] [Packages 31.7 MB] [12 Packages 1,117 B/279 kB 0%]                                                                                Hit https://get.docker.com docker/main i386 Packages
-   99% [10 Packages bzip2 0 B] [Packages 31.7 MB] [12 Packages 47.5 kB/279 kB 17%]                                                                               99% [Packages 31.7 MB] [12 Packages 60.5 kB/279 kB 22%] [Waiting for headers]                                                                             99% [11 Packages bzip2 0 B] [Packages 31.7 MB] [12 Packages 60.5 kB/279 kB 22%]                                                                               99% [Packages 31.7 MB] [12 Packages 60.5 kB/279 kB 22%] [Waiting for headers]                                                                             100% [Packages 31.7 MB] [Waiting for headers]                                             100% [12 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                100% [12 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers]                                                                        100% [12 Packages bzip2 0 B] [Packages 2,682 B] [Waiting for headers] [Waiting                                                                                100% [12 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers]                                                                        100% [12 Packages bzip2 0 B] [Packages 664 kB] [Waiting for headers] [Waiting f                                                                               100% [12 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers]                                                                        100% [12 Packages bzip2 0 B] [Packages 652 B] [Waiting for headers] [Waiting fo                                                                               100% [12 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers]                                                                        100% [12 Packages bzip2 0 B] [Packages 8,205 kB] [Waiting for headers] [Waiting                                                                               Get:13 http://us.archive.ubuntu.com trusty-updates/multiverse amd64 Packages [11.9 kB]
-   100% [12 Packages bzip2 0 B] [Packages 8,205 kB] [13 Packages 0 B/11.9 kB 0%] [                                                                               100% [12 Packages bzip2 0 B] [Packages 8,205 kB] [Waiting for headers]                                                                      Get:14 http://us.archive.ubuntu.com trusty-updates/main i386 Packages [493 kB]
-                                                                         99% [12 Packages bzip2 0 B] [Packages 8,205 kB] [14 Packages 1,117 B/493 kB 0%]                                                                               Get:15 https://get.docker.com docker/main Translation-en_US
-   99% [12 Packages bzip2 0 B] [Packages 8,205 kB] [14 Packages 14.1 kB/493 kB 3%]99% [Packages 8,205 kB] [14 Packages 30.1 kB/493 kB 6%] [Waiting for headers] [99% [13 Packages bzip2 0 B] [Packages 8,205 kB] [14 Packages 30.1 kB/493 kB 6%]99% [Packages 8,205 kB] [14 Packages 33.0 kB/493 kB 7%] [Waiting for headers] [100% [14 Packages 126 kB/493 kB 25%] [Waiting for headers] [15 Translation-en_U100% [Sources 102 kB] [14 Packages 126 kB/493 kB 25%] [Waiting for headers] [15100% [14 Packages 140 kB/493 kB 28%] [Waiting for headers] [15 Translation-en_U100% [Packages 0 B] [14 Packages 143 kB/493 kB 29%] [Waiting for headers] [15 T100% [14 Packages 143 kB/493 kB 29%] [Waiting for headers] [15 Translation-en_U100% [Packages 185 kB] [14 Packages 144 kB/493 kB 29%] [Waiting for headers] [1100% [14 Packages 144 kB/493 kB 29%] [Waiting for headers] [15 Translation-en_U100% [Translation-en 420 B] [14 Packages 144 kB/493 kB 29%] [Waiting for header100% [14 Packages 144 kB/493 kB 29%] [Waiting for headers] [15 Translation-en_U100% [Sources 5,864 B] [14 Packages 144 kB/493 kB 29%] [Waiting for headers] [1100% [14 Packages 144 kB/493 kB 29%] [Waiting for headers] [15 Translation-en_U100% [Packages 31.7 MB] [14 Packages 144 kB/493 kB 29%] [Waiting for headers] [                                                                               100% [Packages 31.7 MB] [Waiting for headers]                                             100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:16 http://us.archive.ubuntu.com trusty-updates/restricted i386 Packages [11.8 kB]
-   100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [16 Packages 0 B/11.8 kB 0%] [W                                                                               100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers]                                                                     Get:17 http://us.archive.ubuntu.com trusty-updates/universe i386 Packages [280 kB]
-                                                                        100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [17 Packages 0 B/280 kB 0%] [Wa                                                                               Ign http://cran.fiocruz.br trusty/ Translation-en_US
-   100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [17 Packages 14.1 kB/280 kB 5%]                                                                               100% [Packages 31.7 MB] [17 Packages 24.3 kB/280 kB 9%] [Waiting for headers]                                                                             100% [16 Packages bzip2 0 B] [Packages 31.7 MB] [17 Packages 24.3 kB/280 kB 9%]                                                                               100% [Packages 31.7 MB] [17 Packages 24.3 kB/280 kB 9%] [Waiting for headers]                                                                             Ign http://cran.fiocruz.br trusty/ Translation-en
-                                                                                100% [Packages 31.7 MB] [17 Packages 110 kB/280 kB 39%]                                                       100% [Packages 31.7 MB]                       100% [17 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers]                                                                     Get:18 http://us.archive.ubuntu.com trusty-updates/multiverse i386 Packages [12.1 kB]
-                                                                        100% [17 Packages bzip2 0 B] [Packages 31.7 MB] [18 Packages 2,567 B/12.1 kB 21                                                                               100% [17 Packages bzip2 0 B] [Packages 31.7 MB]                                               Hit http://us.archive.ubuntu.com trusty-updates/main Translation-en
-   100% [17 Packages bzip2 0 B] [Packages 31.7 MB]                                               100% [17 Packages bzip2 0 B] [Waiting for headers]                                                  100% [17 Packages bzip2 0 B] [Packages 674 kB] [Waiting for headers]                                                                    Hit http://us.archive.ubuntu.com trusty-updates/multiverse Translation-en
-                                                                       100% [17 Packages bzip2 0 B] [Packages 674 kB]                                              100% [17 Packages bzip2 0 B] [Waiting for headers]                                                  100% [17 Packages bzip2 0 B] [Packages 4,111 B] [Waiting for headers]                                                                     100% [17 Packages bzip2 0 B] [Waiting for headers]                                                  100% [17 Packages bzip2 0 B] [Packages 1,810 kB] [Waiting for headers]                                                                      100% [Packages 1,810 kB] [Waiting for headers]                                              100% [18 Packages bzip2 0 B] [Packages 1,810 kB] [Waiting for headers]                                                                      Hit http://us.archive.ubuntu.com trusty-updates/restricted Translation-en
-                                                                         100% [18 Packages bzip2 0 B] [Packages 1,810 kB]                                                100% [Packages 1,810 kB] [Waiting for headers]                                              Hit http://us.archive.ubuntu.com trusty-updates/universe Translation-en
-                                                 100% [Packages 1,810 kB]                        100% [Waiting for headers]                          100% [Translation-en 4,149 kB] [Waiting for headers]                                                    Hit http://us.archive.ubuntu.com trusty-backports/main Sources
-                                                       100% [Translation-en 4,149 kB]                              Hit http://us.archive.ubuntu.com trusty-backports/restricted Sources
-   100% [Translation-en 4,149 kB]                              Hit http://us.archive.ubuntu.com trusty-backports/universe Sources
-   100% [Translation-en 4,149 kB]                              Hit http://us.archive.ubuntu.com trusty-backports/multiverse Sources
-   100% [Translation-en 4,149 kB]                              100% [Waiting for headers]                          100% [Packages 632 B] [Waiting for headers]                                           100% [Waiting for headers]                          100% [Translation-en 409 kB] [Waiting for headers]                                                  100% [Waiting for headers]                          100% [Packages 619 B] [Waiting for headers]                                           100% [Waiting for headers]                          100% [Packages 136 kB] [Waiting for headers]                                            Hit http://us.archive.ubuntu.com trusty-backports/main amd64 Packages
-                                               100% [Packages 136 kB]                      100% [Waiting for headers]                          100% [Translation-en 21.2 kB] [Waiting for headers]                                                   100% [Waiting for headers]                          100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/restricted amd64 Packages
-   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/universe amd64 Packages
-   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/multiverse amd64 Packages
-   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/main i386 Packages
-   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/restricted i386 Packages
-   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/universe i386 Packages
-   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/multiverse i386 Packages
-                                                      100% [Translation-en 18.6 MB]                             Hit http://us.archive.ubuntu.com trusty-backports/main Translation-en
-   100% [Translation-en 18.6 MB]                             Hit http://us.archive.ubuntu.com trusty-backports/multiverse Translation-en
-                                100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/restricted Translation-en
-                                                      100% [Translation-en 18.6 MB]                             Hit http://us.archive.ubuntu.com trusty-backports/universe Translation-en
-   100% [Translation-en 18.6 MB]                             100% [Waiting for headers]                          100% [Packages 631 kB] [Waiting for headers]                                            100% [Waiting for headers]                          100% [Packages 12.5 kB] [Waiting for headers]                                             100% [Waiting for headers]                          100% [Packages 1,721 kB] [Waiting for headers]                                              100% [Waiting for headers]                          100% [Packages 136 kB] [Waiting for headers]                                            100% [Waiting for headers]                          100% [Packages 630 kB] [Waiting for headers]                                            100% [Waiting for headers]                          100% [Packages 13.4 kB] [Waiting for headers]                                             100% [Waiting for headers]                          100% [Packages 352 kB] [Waiting for headers]                                            100% [Waiting for headers]                          100% [Translation-en 1,562 kB] [Waiting for headers]                                                    100% [Waiting for headers]                          100% [Translation-en 5,770 B] [Waiting for headers]                                                   100% [Waiting for headers]                          100% [Translation-en 15.4 kB] [Waiting for headers]                                                   100% [Waiting for headers]                          100% [Packages 45.1 kB] [Waiting for headers]                                             100% [Waiting for headers]                          100% [Translation-en 304 kB] [Waiting for headers]                                                  100% [Waiting for headers]                          100% [Packages 0 B] [Waiting for headers]                                         100% [Waiting for headers]                          100% [Translation-en 2,189 kB] [Waiting for headers]                                                    Ign http://us.archive.ubuntu.com trusty/main Translation-en_US
-   100% [Translation-en 2,189 kB] [Waiting for headers]                                                    Ign http://us.archive.ubuntu.com trusty/multiverse Translation-en_US
-   100% [Translation-en 2,189 kB] [Waiting for headers]                                                    Ign http://us.archive.ubuntu.com trusty/restricted Translation-en_US
-   100% [Translation-en 2,189 kB] [Waiting for headers]                                                    100% [Waiting for headers]                          100% [Translation-en 21.7 kB] [Waiting for headers]                                                   100% [Waiting for headers]                          100% [Translation-en 18.0 kB] [Waiting for headers]                                                   100% [Waiting for headers]                          100% [Translation-en 734 kB] [Waiting for headers]                                                  Ign http://us.archive.ubuntu.com trusty/universe Translation-en_US
-                                                     100% [Translation-en 734 kB]                            100% [Working]              100% [Sources 18.3 kB]                      100% [Working]              100% [Sources 0 B]                  100% [Working]              100% [Sources 102 kB]                     100% [Working]              100% [Sources 4,444 B]                      100% [Working]              100% [Packages 24.0 kB]                       100% [Working]              100% [Packages 0 B]                   100% [Working]              100% [Packages 144 kB]                      100% [Working]              100% [Packages 2,471 B]                       100% [Working]              100% [Packages 23.9 kB]                       100% [Working]              100% [Packages 0 B]                   100% [Working]              100% [Packages 144 kB]                      100% [Working]              100% [Packages 2,465 B]                       100% [Working]              100% [Translation-en 12.4 kB]                             100% [Working]              100% [Translation-en 1,407 B]                             100% [Working]              100% [Translation-en 0 B]                         100% [Working]              100% [Translation-en 102 kB]                            100% [Working]100% [Working]100% [Working]              100% [Working]                                                     23.6 MB/s 0s100% [Working]                                                     23.6 MB/s 0s100% [Working]                                                     23.6 MB/s 0s100% [Working]                                                     23.6 MB/s 0s                                                                               Ign https://get.docker.com docker/main Translation-en_US
-   100% [Working]                                                     23.6 MB/s 0s100% [Working]                                                     23.6 MB/s 0s                                                                               Ign https://get.docker.com docker/main Translation-en
-   100% [Working]                                                     23.6 MB/s 0s                                                                               Fetched 2,008 kB in 8s (228 kB/s)
-   Reading package lists... 0%Reading package lists... 0%Reading package lists... 1%Reading package lists... 6%Reading package lists... 6%Reading package lists... 6%Reading package lists... 6%Reading package lists... 19%Reading package lists... 31%Reading package lists... 31%Reading package lists... 31%Reading package lists... 31%Reading package lists... 33%Reading package lists... 38%Reading package lists... 38%Reading package lists... 38%Reading package lists... 38%Reading package lists... 57%Reading package lists... 62%Reading package lists... 62%Reading package lists... 63%Reading package lists... 63%Reading package lists... 66%Reading package lists... 66%Reading package lists... 67%Reading package lists... 67%Reading package lists... 67%Reading package lists... 67%Reading package lists... 80%Reading package lists... 81%Reading package lists... 81%Reading package lists... 84%Reading package lists... 84%Reading package lists... 84%Reading package lists... 84%Reading package lists... 85%Reading package lists... 85%Reading package lists... 85%Reading package lists... 85%Reading package lists... 88%Reading package lists... 88%Reading package lists... 88%Reading package lists... 88%Reading package lists... 89%Reading package lists... 89%Reading package lists... 89%Reading package lists... 89%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 93%Reading package lists... 93%Reading package lists... 93%Reading package lists... 93%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 95%Reading package lists... 95%Reading package lists... 95%Reading package lists... 95%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 98%Reading package lists... Done
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Get:7 http://ppa.launchpad.net trusty/main amd64 Packages [489 B]
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for100% [7 Packages bzip2 0 B] [Sources 27.9 MB] [Waiting for headers] [Waiting fo100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty/universe Translation-en
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Hit http://security.ubuntu.com trusty-security/main Sources
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting                                                                                Hit http://extras.ubuntu.com trusty/main Sources
+   100% [Sources 27.9 MB] [Waiting for headers] [Waiting for headers] [Connecting 100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connect100% [Sources 711 kB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                                Get:8 http://us.archive.ubuntu.com trusty-updates/main Sources [206 kB]
+   99% [Sources 711 kB] [8 Sources 1,117 B/206 kB 1%] [Waiting for headers] [Waiti99% [8 Sources 35.9 kB/206 kB 17%] [Waiting for headers] [Waiting for headers] 99% [Packages 8,235 kB] [8 Sources 35.9 kB/206 kB 17%] [Waiting for headers] [W                                                                               Get:9 http://ppa.launchpad.net trusty/main i386 Packages [489 B]
+   100% [Packages 8,235 kB] [8 Sources 120 kB/206 kB 58%] [Waiting for headers] [W100% [Packages 8,235 kB] [8 Sources 120 kB/206 kB 58%] [Waiting for headers] [W100% [9 Packages bzip2 0 B] [Packages 8,235 kB] [8 Sources 120 kB/206 kB 58%] [100% [Packages 8,235 kB] [8 Sources 120 kB/206 kB 58%] [Waiting for headers] [W100% [Packages 8,235 kB] [Waiting for headers] [Waiting for headers] [Waiting f100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f                                                                               Hit http://security.ubuntu.com trusty-security/restricted Sources
+   100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f                                                                               Hit http://extras.ubuntu.com trusty/main amd64 Packages
+   100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f                                                                               Get:10 http://us.archive.ubuntu.com trusty-updates/restricted Sources [3,433 B]
+   100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [10 Sources 1,121 B/3,433 B 33%]100% [8 Sources bzip2 0 B] [Packages 8,235 kB] [Waiting for headers] [Waiting f100% [8 Sources bzip2 0 B] [Waiting for headers] [Waiting for headers] [Waiting100% [8 Sources bzip2 1,062 kB] [Packages 184 kB] [Waiting for headers] [Waitin100% [Packages 184 kB] [Waiting for headers] [Waiting for headers] [Waiting for100% [10 Sources bzip2 0 B] [Packages 184 kB] [Waiting for headers] [Waiting fo100% [Packages 184 kB] [Waiting for headers] [Waiting for headers] [Waiting for100% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Waiting100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Get:11 http://us.archive.ubuntu.com trusty-updates/universe Sources [118 kB]
+   100% [Packages 31.7 MB] [11 Sources 1,117 B/118 kB 1%] [Waiting for headers] [W                                                                               Get:12 http://ppa.launchpad.net trusty/main Translation-en [322 B]
+   100% [Packages 31.7 MB] [11 Sources 99.6 kB/118 kB 84%] [Waiting for headers] [100% [Packages 31.7 MB] [11 Sources 99.6 kB/118 kB 84%] [Waiting for headers] [100% [12 Translation-en bzip2 0 B] [Packages 31.7 MB] [11 Sources 99.6 kB/118 k100% [Packages 31.7 MB] [11 Sources 99.6 kB/118 kB 84%] [Waiting for headers] [100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Connecting100% [11 Sources bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting f                                                                               Get:13 http://us.archive.ubuntu.com trusty-updates/multiverse Sources [5,152 B]
+   100% [11 Sources bzip2 0 B] [Packages 31.7 MB] [13 Sources 1,120 B/5,152 B 22%]100% [11 Sources bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting f100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [13 Sources bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting f100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://security.ubuntu.com trusty-security/universe Sources
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://extras.ubuntu.com trusty/main i386 Packages
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Get:14 http://us.archive.ubuntu.com trusty-updates/main amd64 Packages [525 kB]
+   99% [Packages 31.7 MB] [14 Packages 1,117 B/525 kB 0%] [Waiting for headers] [W                                                                               Hit http://security.ubuntu.com trusty-security/multiverse Sources
+   100% [Packages 31.7 MB] [14 Packages 323 kB/525 kB 61%] [Waiting for headers] [                                                                               Ign http://cran.case.edu trusty/ Translation-en_US
+   100% [Packages 31.7 MB] [14 Packages 388 kB/525 kB 74%] [Waiting for headers] [100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Ign http://cran.case.edu trusty/ Translation-en
+   100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:15 http://us.archive.ubuntu.com trusty-updates/restricted amd64 Packages [11.8 kB]
+   100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [15 Packages 1,119 B/11.8 kB 9%100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Hit http://security.ubuntu.com trusty-security/main amd64 Packages
+   100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:16 http://us.archive.ubuntu.com trusty-updates/universe amd64 Packages [282 kB]
+   99% [14 Packages bzip2 0 B] [Packages 31.7 MB] [16 Packages 1,117 B/282 kB 0%] 100% [14 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting 100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [15 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting 100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [16 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Hit http://security.ubuntu.com trusty-security/restricted amd64 Packages
+   100% [16 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:17 http://us.archive.ubuntu.com trusty-updates/multiverse amd64 Packages [11.9 kB]
+   100% [16 Packages bzip2 0 B] [Packages 31.7 MB] [17 Packages 1,119 B/11.9 kB 9%100% [16 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:18 http://us.archive.ubuntu.com trusty-updates/main i386 Packages [514 kB]
+   99% [16 Packages bzip2 0 B] [Packages 31.7 MB] [18 Packages 1,117 B/514 kB 0%] 99% [16 Packages bzip2 0 B] [18 Packages 105 kB/514 kB 21%] [Waiting for header99% [16 Packages bzip2 0 B] [Packages 664 kB] [18 Packages 105 kB/514 kB 21%] [99% [16 Packages bzip2 0 B] [18 Packages 105 kB/514 kB 21%] [Waiting for header99% [16 Packages bzip2 0 B] [Packages 8,205 kB] [18 Packages 105 kB/514 kB 21%]100% [Packages 8,205 kB] [18 Packages 211 kB/514 kB 41%] [Waiting for headers] 100% [17 Packages bzip2 0 B] [Packages 8,205 kB] [18 Packages 211 kB/514 kB 41%100% [Packages 8,205 kB] [18 Packages 211 kB/514 kB 41%] [Waiting for headers]                                                                                Hit http://security.ubuntu.com trusty-security/universe amd64 Packages
+                                                                                  100% [Packages 8,205 kB] [18 Packages 402 kB/514 kB 78%] [Waiting for headers]                                                                              100% [Packages 8,205 kB] [Waiting for headers] [Waiting for headers]                                                                    100% [18 Packages bzip2 0 B] [Packages 8,205 kB] [Waiting for headers] [Waiting100% [18 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers] [Waiti100% [18 Packages bzip2 0 B] [Packages 185 kB] [Waiting for headers] [Waiting f100% [18 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers] [Waiti100% [18 Packages bzip2 0 B] [Packages 352 kB] [Waiting for headers] [Waiting f100% [18 Packages bzip2 0 B] [Waiting for headers] [Waiting for headers] [Waiti100% [18 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Hit http://security.ubuntu.com trusty-security/multiverse amd64 Packages
+   100% [18 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:19 http://us.archive.ubuntu.com trusty-updates/restricted i386 Packages [11.8 kB]
+   100% [18 Packages bzip2 0 B] [Packages 31.7 MB] [19 Packages 2,567 B/11.8 kB 22100% [18 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:20 http://us.archive.ubuntu.com trusty-updates/universe i386 Packages [283 kB]
+   100% [18 Packages bzip2 0 B] [Packages 31.7 MB] [20 Packages 1,117 B/283 kB 0%]100% [Packages 31.7 MB] [20 Packages 186 kB/283 kB 66%] [Waiting for headers] [100% [19 Packages bzip2 0 B] [Packages 31.7 MB] [20 Packages 186 kB/283 kB 66%]100% [Packages 31.7 MB] [20 Packages 208 kB/283 kB 74%] [Waiting for headers] [                                                                               100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   100% [20 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:21 http://us.archive.ubuntu.com trusty-updates/multiverse i386 Packages [12.1 kB]
+   100% [20 Packages bzip2 0 B] [Packages 31.7 MB] [21 Packages 2,567 B/12.1 kB 21100% [20 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Hit http://security.ubuntu.com trusty-security/main i386 Packages
+   100% [20 Packages bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Waiting                                                                                Get:22 http://us.archive.ubuntu.com trusty-updates/main Translation-en [249 kB]
+   100% [20 Packages bzip2 0 B] [Packages 31.7 MB] [22 Translation-en 1,120 B/249 100% [Packages 31.7 MB] [22 Translation-en 213 kB/249 kB 85%] [Waiting for head100% [21 Packages bzip2 0 B] [Packages 31.7 MB] [22 Translation-en 213 kB/249 k100% [Packages 31.7 MB] [22 Translation-en 213 kB/249 kB 85%] [Waiting for head                                                                               100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   100% [22 Translation-en bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Wa                                                                               Hit http://us.archive.ubuntu.com trusty-updates/multiverse Translation-en
+   100% [22 Translation-en bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Wa                                                                               Hit http://us.archive.ubuntu.com trusty-updates/restricted Translation-en
+   100% [22 Translation-en bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Wa                                                                               Hit http://security.ubuntu.com trusty-security/restricted i386 Packages
+   100% [22 Translation-en bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Wa                                                                               Get:23 http://us.archive.ubuntu.com trusty-updates/universe Translation-en [147 kB]
+   100% [22 Translation-en bzip2 0 B] [Packages 31.7 MB] [23 Translation-en 1,120 100% [Packages 31.7 MB] [23 Translation-en 147 kB/147 kB 100%] [Waiting for hea100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo100% [23 Translation-en bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Wa                                                                               Hit http://us.archive.ubuntu.com trusty-backports/main Sources
+   100% [23 Translation-en bzip2 0 B] [Packages 31.7 MB] [Waiting for headers] [Wa100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers] [Waiting fo                                                                               Hit http://us.archive.ubuntu.com trusty-backports/restricted Sources
+                                                                                  100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   Hit http://us.archive.ubuntu.com trusty-backports/universe Sources
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   Hit http://us.archive.ubuntu.com trusty-backports/multiverse Sources
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   Hit http://security.ubuntu.com trusty-security/universe i386 Packages
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   Hit http://us.archive.ubuntu.com trusty-backports/main amd64 Packages
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   Hit http://us.archive.ubuntu.com trusty-backports/restricted amd64 Packages
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   Hit http://us.archive.ubuntu.com trusty-backports/universe amd64 Packages
+   100% [Packages 31.7 MB] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers] [Waiting for headers]                                                                      100% [Packages 674 kB] [Waiting for headers] [Waiting for headers] [Waiting for                                                                               Hit http://us.archive.ubuntu.com trusty-backports/multiverse amd64 Packages
+                                                                                  100% [Packages 674 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers] [Waiting for headers]                                                                      100% [Translation-en 4,149 kB] [Waiting for headers] [Waiting for headers] [Wai                                                                               Hit http://us.archive.ubuntu.com trusty-backports/main i386 Packages
+                                                                                  100% [Translation-en 4,149 kB] [Waiting for headers] [Waiting for headers]                                                                          Hit http://us.archive.ubuntu.com trusty-backports/restricted i386 Packages
+   100% [Translation-en 4,149 kB] [Waiting for headers] [Waiting for headers]                                                                          Hit http://security.ubuntu.com trusty-security/multiverse i386 Packages
+   100% [Translation-en 4,149 kB] [Waiting for headers] [Waiting for headers]                                                                          Ign http://extras.ubuntu.com trusty/main Translation-en_US
+   100% [Translation-en 4,149 kB] [Waiting for headers] [Waiting for headers]                                                                          100% [Waiting for headers] [Waiting for headers] [Waiting for headers]                                                                      100% [Translation-en 409 kB] [Waiting for headers] [Waiting for headers] [Waiti                                                                               100% [Waiting for headers] [Waiting for headers] [Waiting for headers]                                                                      100% [Translation-en 21.2 kB] [Waiting for headers] [Waiting for headers] [Wait                                                                               100% [Waiting for headers] [Waiting for headers] [Waiting for headers]                                                                      100% [Translation-en 18.6 MB] [Waiting for headers] [Waiting for headers] [Wait                                                                               Hit http://us.archive.ubuntu.com trusty-backports/universe i386 Packages
+                                                                                  100% [Translation-en 18.6 MB] [Waiting for headers] [Waiting for headers]                                                                         Hit http://us.archive.ubuntu.com trusty-backports/multiverse i386 Packages
+   100% [Translation-en 18.6 MB] [Waiting for headers] [Waiting for headers]                                                                         Hit http://security.ubuntu.com trusty-security/main Translation-en
+   100% [Translation-en 18.6 MB] [Waiting for headers] [Waiting for headers]                                                                         Hit http://us.archive.ubuntu.com trusty-backports/main Translation-en
+                                                                            Ign http://extras.ubuntu.com trusty/main Translation-en
+   100% [Translation-en 18.6 MB] [Waiting for headers] [Waiting for headers]                                                                         Hit http://us.archive.ubuntu.com trusty-backports/multiverse Translation-en
+                                                                            100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/restricted Translation-en
+   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://us.archive.ubuntu.com trusty-backports/universe Translation-en
+   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   Hit http://security.ubuntu.com trusty-security/multiverse Translation-en
+   100% [Translation-en 18.6 MB] [Waiting for headers]                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 402 kB] [Waiting for headers] [Waiting for headers]                                                                 100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 0 B] [Waiting for headers] [Waiting for headers]                                                              100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 8,902 B] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 0 B] [Waiting for headers] [Waiting for headers]                                                               100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 102 kB] [Waiting for headers] [Waiting for headers]                                                                 100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 0 B] [Waiting for headers] [Waiting for headers]                                                               100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 5,864 B] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 1,810 kB] [Waiting for headers] [Waiting for headers]                                                                    100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 136 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 631 kB] [Waiting for headers] [Waiting for headers]                                                                  Hit http://security.ubuntu.com trusty-security/restricted Translation-en
+                                                                     100% [Packages 631 kB] [Waiting for headers]                                            100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 12.5 kB] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 1,721 kB] [Waiting for headers] [Waiting for headers]                                                                    100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 21.7 kB] [Waiting for headers] [Waiting for headers]                                                                         100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 18.0 kB] [Waiting for headers] [Waiting for headers]                                                                         100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 136 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 18.3 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 0 B] [Waiting for headers] [Waiting for headers]                                                              100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 102 kB] [Waiting for headers] [Waiting for headers]                                                                 100% [Waiting for headers] [Waiting for headers]                                                100% [Sources 4,444 B] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 630 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 24.0 kB] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 0 B] [Waiting for headers] [Waiting for headers]                                                               100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 144 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 2,471 B] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 23.9 kB] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 0 B] [Waiting for headers] [Waiting for headers]                                                               100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 13.4 kB] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 144 kB] [Waiting for headers] [Waiting for headers]                                                                  100% [Waiting for headers] [Waiting for headers]                                                100% [Packages 2,465 B] [Waiting for headers] [Waiting for headers]                                                                   100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 1,562 kB] [Waiting for headers] [Waiting for headers]                                                                          100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 12.4 kB] [Waiting for headers] [Waiting for headers]                                                                         100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 1,407 B] [Waiting for headers] [Waiting for headers]                                                                         100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 0 B] [Waiting for headers] [Waiting for headers]                                                                     100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 102 kB] [Waiting for headers] [Waiting for headers]                                                                        100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 5,770 B] [Waiting for headers] [Waiting for headers]                                                                         100% [Waiting for headers] [Waiting for headers]                                                100% [Translation-en 15.4 kB] [Waiting for headers] [Waiting for headers]                                                                         100% [Waiting for headers] [Waiting for headers]                                                Ign http://us.archive.ubuntu.com trusty/main Translation-en_US
+                                                   100% [Waiting for headers]                          Ign http://us.archive.ubuntu.com trusty/multiverse Translation-en_US
+   100% [Waiting for headers]                          Ign http://us.archive.ubuntu.com trusty/restricted Translation-en_US
+   100% [Waiting for headers]                          Ign http://us.archive.ubuntu.com trusty/universe Translation-en_US
+   100% [Waiting for headers]                          Hit http://security.ubuntu.com trusty-security/universe Translation-en
+                             100% [Working]              100% [Translation-en 304 kB]                            100% [Working]              Fetched 2,466 kB in 2s (1,136 kB/s)
+   Reading package lists... 0%Reading package lists... 0%Reading package lists... 1%Reading package lists... 6%Reading package lists... 6%Reading package lists... 6%Reading package lists... 6%Reading package lists... 31%Reading package lists... 31%Reading package lists... 31%Reading package lists... 31%Reading package lists... 38%Reading package lists... 38%Reading package lists... 38%Reading package lists... 38%Reading package lists... 49%Reading package lists... 62%Reading package lists... 62%Reading package lists... 63%Reading package lists... 63%Reading package lists... 66%Reading package lists... 66%Reading package lists... 67%Reading package lists... 67%Reading package lists... 67%Reading package lists... 67%Reading package lists... 81%Reading package lists... 81%Reading package lists... 84%Reading package lists... 84%Reading package lists... 84%Reading package lists... 84%Reading package lists... 85%Reading package lists... 85%Reading package lists... 85%Reading package lists... 85%Reading package lists... 88%Reading package lists... 88%Reading package lists... 88%Reading package lists... 88%Reading package lists... 89%Reading package lists... 89%Reading package lists... 89%Reading package lists... 89%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 91%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 92%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 94%Reading package lists... 95%Reading package lists... 95%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 96%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 97%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 98%Reading package lists... 99%Reading package lists... Done
    Reading package lists... 0%Reading package lists... 100%Reading package lists... Done
    Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree       
    Reading state information... 0%Reading state information... 0%Reading state information... Done
-   ansible is already the newest version.
    The following packages were automatically installed and are no longer required:
-     gcc-4.8-base:i386 libasn1-8-heimdal:i386 libasound2:i386 libcgmanager0:i386
-     libcurl3:i386 libdbus-glib-1-2:i386 libdbusmenu-glib4:i386
-     libdbusmenu-gtk4:i386 libgconf-2-4:i386 libgssapi3-heimdal:i386
-     libhcrypto4-heimdal:i386 libheimbase1-heimdal:i386 libheimntlm0-heimdal:i386
-     libhx509-5-heimdal:i386 libidn11:i386 libkrb5-26-heimdal:i386
-     libldap-2.4-2:i386 libnspr4:i386 libnss3:i386 libpango1.0-0:i386
-     libpangox-1.0-0:i386 libpangoxft-1.0-0:i386 libroken18-heimdal:i386
-     librtmp0:i386 libsasl2-2:i386 libsasl2-modules:i386 libsasl2-modules-db:i386
-     libsqlite3-0:i386 libssl1.0.0:i386 libstdc++6:i386 libudev1:i386
-     libwind0-heimdal:i386 libxft2:i386 libxss1:i386 libxtst6:i386
+     libtcl8.5 libtk8.5 tcl8.5 tk8.5
    Use 'apt-get autoremove' to remove them.
-   0 upgraded, 0 newly installed, 0 to remove and 416 not upgraded.
+   The following extra packages will be installed:
+     python-jinja2 python-markupsafe python-paramiko python-support python-yaml
+     sshpass
+   Suggested packages:
+     python-jinja2-doc
+   The following NEW packages will be installed:
+     ansible python-jinja2 python-markupsafe python-paramiko python-support
+     python-yaml sshpass
+   0 upgraded, 7 newly installed, 0 to remove and 99 not upgraded.
+   Need to get 1,043 kB of archives.
+   After this operation, 6,621 kB of additional disk space will be used.
+   0% [Working]            Get:1 http://us.archive.ubuntu.com/ubuntu/ trusty/universe python-support all 1.0.15 [26.7 kB]
+               1% [1 python-support 6,989 B/26.7 kB 26%] [Connecting to ppa.launchpad.net (91.                                                                               3% [Connecting to ppa.launchpad.net (91.189.95.83)]                                                   Get:2 http://us.archive.ubuntu.com/ubuntu/ trusty/main python-markupsafe amd64 0.18-1build2 [14.3 kB]
+                                                      3% [2 python-markupsafe 2,645 B/14.3 kB 18%] [Connecting to ppa.launchpad.net (                                                                               4% [Connecting to ppa.launchpad.net (91.189.95.83)]                                                   Get:3 http://us.archive.ubuntu.com/ubuntu/ trusty/main python-jinja2 all 2.7.2-2 [161 kB]
+                                                      4% [3 python-jinja2 1,195 B/161 kB 1%] [Waiting for headers]                                                            19% [Waiting for headers]                         Get:4 http://ppa.launchpad.net/ansible/ansible/ubuntu/ trusty/main ansible all 1.9.1-1ppa~trusty [624 kB]
+                            20% [Waiting for headers] [4 ansible 4,083 B/624 kB 1%]                                                       Get:5 http://us.archive.ubuntu.com/ubuntu/ trusty-updates/main python-yaml amd64 3.10-4ubuntu0.1 [102 kB]
+                                                          21% [5 python-yaml 1,195 B/102 kB 1%] [4 ansible 14.2 kB/624 kB 2%]                                                                   30% [4 ansible 14.2 kB/624 kB 2%]                                 Get:6 http://us.archive.ubuntu.com/ubuntu/ trusty/main python-paramiko all 1.10.1-1git1build1 [106 kB]
+                                    31% [6 python-paramiko 2,643 B/106 kB 2%] [4 ansible 14.2 kB/624 kB 2%]                                                                       41% [4 ansible 14.2 kB/624 kB 2%]                                 Get:7 http://us.archive.ubuntu.com/ubuntu/ trusty/universe sshpass amd64 1.05-1 [10.5 kB]
+                                    41% [7 sshpass 2,645 B/10.5 kB 25%] [4 ansible 14.2 kB/624 kB 2%]                                                                 42% [4 ansible 14.2 kB/624 kB 2%]79% [4 ansible 405 kB/624 kB 65%]                                 100% [Working]              Fetched 1,043 kB in 0s (1,169 kB/s)
+   debconf: unable to initialize frontend: Dialog
+   debconf: (Dialog frontend will not work on a dumb terminal, an emacs shell buffer, or without a controlling terminal.)
+   debconf: falling back to frontend: Readline
+   Selecting previously unselected package python-support.
+   (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 283471 files and directories currently installed.)
+   Preparing to unpack .../python-support_1.0.15_all.deb ...
+   Unpacking python-support (1.0.15) ...
+   Selecting previously unselected package python-markupsafe.
+   Preparing to unpack .../python-markupsafe_0.18-1build2_amd64.deb ...
+   Unpacking python-markupsafe (0.18-1build2) ...
+   Selecting previously unselected package python-jinja2.
+   Preparing to unpack .../python-jinja2_2.7.2-2_all.deb ...
+   Unpacking python-jinja2 (2.7.2-2) ...
+   Selecting previously unselected package python-yaml.
+   Preparing to unpack .../python-yaml_3.10-4ubuntu0.1_amd64.deb ...
+   Unpacking python-yaml (3.10-4ubuntu0.1) ...
+   Selecting previously unselected package python-paramiko.
+   Preparing to unpack .../python-paramiko_1.10.1-1git1build1_all.deb ...
+   Unpacking python-paramiko (1.10.1-1git1build1) ...
+   Selecting previously unselected package sshpass.
+   Preparing to unpack .../sshpass_1.05-1_amd64.deb ...
+   Unpacking sshpass (1.05-1) ...
+   Selecting previously unselected package ansible.
+   Preparing to unpack .../ansible_1.9.1-1ppa~trusty_all.deb ...
+   Unpacking ansible (1.9.1-1ppa~trusty) ...
+   Processing triggers for man-db (2.6.7.1-1ubuntu1) ...
+   Setting up python-support (1.0.15) ...
+   Setting up python-markupsafe (0.18-1build2) ...
+   Setting up python-jinja2 (2.7.2-2) ...
+   Setting up python-yaml (3.10-4ubuntu0.1) ...
+   Setting up python-paramiko (1.10.1-1git1build1) ...
+   Setting up sshpass (1.05-1) ...
+   Setting up ansible (1.9.1-1ppa~trusty) ...
+   Processing triggers for python-support (1.0.15) ...
 #+end_example
 
 *** DONE Create a directory for ansible configs
@@ -305,17 +317,17 @@
     #+end_src
 
     #+RESULTS:
-    : # Sun May 31 16:30:06 EDT 2015
+    : # Mon Jun 1 07:02:37 EDT 2015
 
-*** DONE Create our own hosts file that uses passwords
+*** CANCELED Create our own hosts file that uses passwords
 
-   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password
+   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password clientIP=clientIP
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
    
    cd $ansibleDir
    cat <<END > hosts.password
    [hosts]  
-   192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=${password}
+   ${clientIP} ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=${password}
 END
 
    cat hosts.password || true
@@ -323,11 +335,11 @@ END
    #+end_src
 
    #+RESULTS:
-   : # Sun May 31 16:32:25 EDT 2015
+   : # Mon Jun 1 07:11:05 EDT 2015
    :    [hosts]  
-   :    192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=changethis
+   :    10.97.22.138 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=changethis
 
-*** DONE Install sshpass
+*** CANCELED Install sshpass
 
    Needed for ansible_ssh_passansible_ssh_pass
 
@@ -358,7 +370,7 @@ END
    0 upgraded, 0 newly installed, 0 to remove and 416 not upgraded.
 #+end_example
 
-*** DONE Run some arbitrary code on all Ubuntu hosts
+*** CANCELED Run some arbitrary code on all Ubuntu hosts
    #+begin_src sh  :results output :exports both
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
 
@@ -383,7 +395,7 @@ END
 
 #+end_example
 
-*** DONE Disable host key checking
+*** CANCELED Disable host key checking
    #+begin_src sh  :results output :exports code
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
    sudo sed -i 's/#host_key_checking = False/host_key_checking = False/' /etc/ansible/ansible.cfg
@@ -394,7 +406,7 @@ END
    : # Sun May 31 16:46:50 EDT 2015
    : host_key_checking = False
 
-*** DONE Create an SSH key
+*** CANCELED Create an SSH key
 
     Create a new SSH key if needed.
 
@@ -464,7 +476,7 @@ END
 
 
 
-*** DONE Create playbook to install SSH keys and create accounts
+*** CANCELED Create playbook to install SSH keys and create accounts
    Borrowed from http://www.hashbangcode.com/blog/ansible-ssh-setup-playbook 
 
    #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir :var sshKeyName=sshKeyName :var password=password
@@ -511,23 +523,23 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 16:57:31 EDT 2015
-   # Sun May 31 16:57:31 EDT 2015
+   + echo '#' Mon Jun 1 07:04:18 EDT 2015
+   # Mon Jun 1 07:04:18 EDT 2015
    + echo password is changethis
    password is changethis
-   + echo sshKeyName is ansible
-   sshKeyName is ansible
-   + echo ansibleDir is /home/george/ansible
-   ansibleDir is /home/george/ansible
-   + cd /home/george/ansible
+   + echo sshKeyName is gejones14
+   sshKeyName is gejones14
+   + echo ansibleDir is /home/gmj/ansible
+   ansibleDir is /home/gmj/ansible
+   + cd /home/gmj/ansible
    + cat
    + ls -l setup.yml
-   -rw-rw-r-- 1 george george 863 May 31 16:57 setup.yml
+   -rw-rw-r-- 1 gmj gmj 865 Jun  1 07:04 setup.yml
 #+end_example
 
 ** Push out ssh keys and create accounts to managed hosts(s)
 
-*** DONE Run the playbook to install SSH keys and create accounts
+*** CANCELED Run the playbook to install SSH keys and create accounts
    #+begin_src sh  :results output :exports both
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
    ansible-playbook setup.yml    || true
@@ -566,7 +578,7 @@ END
 #+end_example
 
 *** DONE Create an ansible hosts file that uses SSH credentials
-   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir :var sshKeyName=sshKeyName :var password=password
+   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password clientIP=clientIP
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
    echo sshKeyName is $sshKeyName
    echo ansibleDir is $ansibleDir
@@ -574,7 +586,7 @@ END
    cd $ansibleDir
    cat <<END > hosts.sshkeys
 [default]  
-192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=${sshKeyName}
+${clientIP} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=${sshKeyName}
 END
    echo hosts.sshkeys file is
    cat hosts.sshkeys
@@ -583,41 +595,44 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 16:59:20 EDT 2015
-   # Sun May 31 16:59:20 EDT 2015
-   + echo sshKeyName is ansible
-   sshKeyName is ansible
-   + echo ansibleDir is /home/george/ansible
-   ansibleDir is /home/george/ansible
-   + cd /home/george/ansible
+   + echo '#' Mon Jun 1 07:17:20 EDT 2015
+   # Mon Jun 1 07:17:20 EDT 2015
+   + echo sshKeyName is gejones14.pem
+   sshKeyName is gejones14.pem
+   + echo ansibleDir is /home/gmj/ansible
+   ansibleDir is /home/gmj/ansible
+   + cd /home/gmj/ansible
    + cat
    + echo hosts.sshkeys file is
    hosts.sshkeys file is
    + cat hosts.sshkeys
    [default]  
-   192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
+   10.97.22.138 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=gejones14.pem
 #+end_example
 
 *** DONE Run ansible ping using ssh credentials
    #+begin_src sh  :results output :exports both :var ansibleDir=ansibleDir
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
    cd $ansibleDir
+   pwd
    ansible -i hosts.sshkeys all -m ping || true
    #+end_src
 
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 17:00:44 EDT 2015
-   # Sun May 31 17:00:44 EDT 2015
-   + cd /home/george/ansible
+   + echo '#' Mon Jun 1 07:17:30 EDT 2015
+   # Mon Jun 1 07:17:30 EDT 2015
+   + cd /home/gmj/ansible
+   + pwd
+   /home/gmj/ansible
    + ansible -i hosts.sshkeys all -m ping
-   192.168.1.100 | success >> {
-       "changed": false, 
+   10.97.22.138 | success >> {
+       "changed": false,
        "ping": "pong"
    }
 
-   #+end_example
+#+end_example
 
 
 
@@ -632,19 +647,19 @@ END
 
    #+RESULTS:
    #+begin_example
-   Sun May 31 17:52:05 EDT 2015
-   + cd /home/george/ansible
+   Mon Jun  1 07:18:00 EDT 2015
+   + cd /home/gmj/ansible
    + ansible -i hosts.sshkeys all -s -m shell -a date
-   192.168.1.100 | success | rc=0 >>
-   Sun May 31 17:52:14 EDT 2015
+   10.97.22.138 | success | rc=0 >>
+   Mon Jun  1 11:17:24 UTC 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
-   192.168.1.100 | success | rc=0 >>
+   10.97.22.138 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
 
-*** TODO Disable ssh password authentication on managed hosts
+*** CANCELED Disable ssh password authentication on managed hosts
 
     If we can diable ssh password login, it means key-based
     authentication is working...
