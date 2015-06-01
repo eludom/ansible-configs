@@ -1,5 +1,5 @@
 #+TITLE: Ansible nginx example
-#+DATE: <2015-05-31 19:46:18 Sunday>
+#+DATE: <2015-05-31 20:09:06 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -112,7 +112,7 @@
 #+end_example
 
 ** Create roles directory and pull nginx and ssh examples
-   #+begin_src sh  :results output :exports both  :var ansibleDir=ansibleDir
+   #+begin_src sh  :results output :exports code  :var ansibleDir=ansibleDir
    exec 2>&1;date;set -e; set -u; set +x
 
    cd $ansibleDir
@@ -147,9 +147,41 @@
    : Already up-to-date.
 
 
-   
+** Make sure roles_path is correct in /etc/ansible/ansible.cfg
+   #+begin_src sh  :results output :exports code  :var ansibleDir=ansibleDir :dir /sudo:: 
+   exec 2>&1;date;set -e; set -u; set +x
 
-* Install nginx and ssl example roles and run
+   newPath="${ansibleDir}/roles"
+   grep roles_path /etc/ansible/ansible.cfg || true
+   sudo sed -i '1,$s/^roles_path.*// ' /etc/ansible/ansible.cfg || true
+   sudo sed -i "/roles_path/aroles_path     = $newPath " /etc/ansible/ansible.cfg || true
+   #
+   grep roles_path /etc/ansible/ansible.cfg || true
+   #+end_src
+
+   #+RESULTS:
+   : Sun May 31 19:56:57 EDT 2015
+   : #roles_path    = /etc/ansible/roles
+   : roles_path     = /home/george/ansible/rolesFOO 
+   : #roles_path    = /etc/ansible/roles
+   : roles_path     = /home/george/ansible/roles 
+
+** link /etc/ansible/hosts to hosts.ssl
+   #+begin_src sh  :results output :exports coe  :var ansibleDir=ansibleDir :dir /sudo:: 
+   exec 2>&1;date;set -e; set -u; set +x
+   rm -f /etc/ansible/hosts || true 
+   sshHosts="${ansibleDir}/hosts.sshkeys" 
+   ln -s ${sshHosts} /etc/ansible/hosts || true
+   cat /etc/ansible/hosts || true
+   #+end_src
+
+   #+RESULTS:
+   : Sun May 31 20:02:25 EDT 2015
+   : [default]  
+   : 192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
+   : 
+   : [web]  
+   : 192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
 
 
 https://github.com/Servers-for-Hackers/ansible-nginx
@@ -157,268 +189,83 @@ https://github.com/Servers-for-Hackers/ansible-nginx
 
 ansible-playbook -s server.yml
    
-
-** Create playbook to install nginx
+** Create a server.yml file naming the host groups and referencing the role
    #+begin_src sh  :results output :exports code
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
-   cat <<END >nginx.yml
+   cat <<END >server.yml
 ---
 - hosts: web
-  vars:
-   - docroot: /var/www/serversforhackers.com/public
-  tasks:
-   - name: Add Nginx Repository
-     apt_repository: repo='ppa:nginx/stable' state=present
-     register: ppastable
-
-   - name: Install Nginx
-     apt: pkg=nginx state=installed update_cache=true
-     when: ppastable|success
-     register: nginxinstalled
-     notify:
-      - Start Nginx
-
-   - name: Create Web Root
-     when: nginxinstalled|success
-     file: dest={{ '{{' }} docroot {{ '}}' }} mode=775 state=directory owner=www-data group=www-data
-     notify:
-      - Reload Nginx
-
-  handlers:
-   - name: Start Nginx
-     service: name=nginx state=started
-
-   - name: Reload Nginx
-     service: name=nginx state=reloaded
+  roles:
+    - ansible-nginx
 END
-   cat nginx.yml
+   cat server.yml || true
    #+end_src
 
    #+RESULTS:
-   #+begin_example
-   # Sun May 31 18:04:24 EDT 2015
-   ---
-   - hosts: web
-     vars:
-      - docroot: /var/www/serversforhackers.com/public
-     tasks:
-      - name: Add Nginx Repository
-	apt_repository: repo='ppa:nginx/stable' state=present
-	register: ppastable
+   : # Sun May 31 20:05:21 EDT 2015
+   : ---
+   : - hosts: web
+   :   roles:
+   :     - ansible-nginx
 
-      - name: Install Nginx
-	apt: pkg=nginx state=installed update_cache=true
-	when: ppastable|success
-	register: nginxinstalled
-	notify:
-	 - Start Nginx
-
-      - name: Create Web Root
-	when: nginxinstalled|success
-	file: dest={{ '{{' }} docroot {{ '}}' }} mode=775 state=directory owner=www-data group=www-data
-	notify:
-	 - Reload Nginx
-
-     handlers:
-      - name: Start Nginx
-	service: name=nginx state=started
-
-      - name: Reload Nginx
-	service: name=nginx state=reloaded
-#+end_example
-
-** Run nginx playbook
+** Run the playbook
    #+begin_src sh  :results output :exports both :var ansibleDir=ansibleDir
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
 
    cd $ansibleDir || true
-   ansible-playbook -i hosts.sshkeys -s nginx.yml || true   
-   #+end_src
-
-   
-* Things To Do							   :noexport:
-** TODO Test once or twice more
-** TODO Add nginx config
-** TODO clean up
-** TODO blog
-
-** TODO do emacs
-** TODO do mhn
-
-** Finally, do something useful
-** DONE Set the hostname on an ubuntu system
-
-   This block sets the hostname on a new new ubutnu system.
-   It assumes the first occurance of "ubuntu" in /etc/hosts is the
-   current hostname, and sets it to ${hostname}
-
-   #+begin_src sh  :results output :exports both :var NEWNAME="octo" :dir /sudo:: 
-   exec 2>&1;date;set -e; set -u; set -x
-
-   hostname=${NEWNAME}  || true
-   sh -c 'echo ${hostname} > /etc/hostname'  || true
-   hostname ${hostname}  || true
-   cat /etc/hosts | sed "s/127.0.1.1.*/127.0.1.1	${hostname}/" > /tmp/hosts.$$  || true
-   mv /etc/hosts /etc/hosts.`date '+%Y%m%d:%H:%M:%S'`  || true
-   mv /tmp/hosts.$$ /etc/hosts  || true
-   chmod 644 /etc/hosts
+   ansible-playbook -s server.yml || true   
    #+end_src
 
    #+RESULTS:
    #+begin_example
-   Wed May 27 19:08:52 EDT 2015
-   + hostname=octo
-   + sh -c 'echo ${hostname} > /etc/hostname'
-   + hostname octo
-   + cat /etc/hosts
-   + sed 's/127.0.1.1.*/127.0.1.1        octo/'
-   ++ date +%Y%m%d:%H:%M:%S
-   + mv /etc/hosts /etc/hosts.20150527:19:08:52
-   + mv /tmp/hosts.12584 /etc/hosts
-   + chmod 644 /etc/hosts
+   ++ date
+   + echo '#' Sun May 31 20:07:57 EDT 2015
+   # Sun May 31 20:07:57 EDT 2015
+   + cd /home/george/ansible
+   + ansible-playbook -s server.yml
+
+   PLAY [web] ******************************************************************** 
+
+   GATHERING FACTS *************************************************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ssl | Create SFH SSL Directry] ***************************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ssl | Upload Unencrypted Key File] ************************************* 
+   ok: [192.168.1.100]
+
+   TASK: [ssl | Upload Unencrypted Cert File] ************************************ 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Add Nginx Repository] ********************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Install Nginx] ***************************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Add H5BP Config] *************************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Add Nginx Config] ************************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Add Nginx Mime Types] ********************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Disable Default Site] ********************************** 
+   ok: [192.168.1.100]
+
+   TASK: [ansible-nginx | Add SFH Site Config (main or forums)] ****************** 
+   fatal: [192.168.1.100] => One or more undefined variables: 'domain' is undefined
+
+   FATAL: all hosts have already failed -- aborting
+
+   PLAY RECAP ******************************************************************** 
+	      to retry, use: --limit @/home/george/server.retry
+
+   192.168.1.100              : ok=10   changed=0    unreachable=1    failed=0   
+
+   + true
 #+end_example
-
-
-
-
-** Install nginx on all web servers
-
-   Install nginx.  Before and after test to see if it is installed.
-   http://stackoverflow.com/questions/1298066/check-if-a-package-is-installed-and-then-install-it-if-its-not
-
-   #+begin_src sh  :results output :exports both
-   exec 2>&1;date;set -e; set -u; set -x
-
-   dpkg-query -l nginx || true
-   ansible web -s -m apt -a 'pkg=nginx state=present update_cache=true' || true
-   dpkg-query -l nginx || true
-   #+end_src
-
-   #+RESULTS:
-   #+begin_example
-   Sat May 30 06:36:55 EDT 2015
-   + dpkg-query -l nginx
-   Desired=Unknown/Install/Remove/Purge/Hold
-   | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-   |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-   ||/ Name                                                  Version                                             Architecture Description
-   +++-=====================================================-===================================================-============-=====================================================================================================================================================================================================================
-   un  nginx                                                 <none>                                              <none>       (no description available)
-   + ansible web -s -m apt -a 'pkg=nginx state=present update_cache=true'
-   octo | success >> {
-       "changed": true, 
-       "stderr": "", 
-       "stdout": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nThe following packages were automatically installed and are no longer required:\n  gcc-4.8-base:i386 libasn1-8-heimdal:i386 libasound2:i386 libcgmanager0:i386\n  libcurl3:i386 libdbus-glib-1-2:i386 libdbusmenu-glib4:i386\n  libdbusmenu-gtk4:i386 libgconf-2-4:i386 libgssapi3-heimdal:i386\n  libhcrypto4-heimdal:i386 libheimbase1-heimdal:i386 libheimntlm0-heimdal:i386\n  libhx509-5-heimdal:i386 libidn11:i386 libkrb5-26-heimdal:i386\n  libldap-2.4-2:i386 libnspr4:i386 libnss3:i386 libpango1.0-0:i386\n  libpangox-1.0-0:i386 libpangoxft-1.0-0:i386 libroken18-heimdal:i386\n  librtmp0:i386 libsasl2-2:i386 libsasl2-modules:i386 libsasl2-modules-db:i386\n  libsqlite3-0:i386 libssl1.0.0:i386 libstdc++6:i386 libudev1:i386\n  libwind0-heimdal:i386 libxft2:i386 libxss1:i386 libxtst6:i386\nUse 'apt-get autoremove' to remove them.\nThe following NEW packages will be installed:\n  nginx\n0 upgraded, 1 newly installed, 0 to remove and 416 not upgraded.\nNeed to get 0 B/5420 B of archives.\nAfter this operation, 95.2 kB of additional disk space will be used.\nSelecting previously unselected package nginx.\n(Reading database ... 343345 files and directories currently installed.)\nPreparing to unpack .../nginx_1.4.6-1ubuntu3.2_all.deb ...\nUnpacking nginx (1.4.6-1ubuntu3.2) ...\nSetting up nginx (1.4.6-1ubuntu3.2) ...\n"
-   }
-
-   + dpkg-query -l nginx
-   Desired=Unknown/Install/Remove/Purge/Hold
-   | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-   |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-   ||/ Name                                                  Version                                             Architecture Description
-   +++-=====================================================-===================================================-============-=====================================================================================================================================================================================================================
-   ii  nginx                                                 1.4.6-1ubuntu3.2                                    all          small, powerful, scalable web/proxy server
-#+end_example
-
-** Uninstall nginx on all web servers
-
-   Uninstall nginx.  Before and after test to see if it is installed.
-   http://stackoverflow.com/questions/1298066/check-if-a-package-is-installed-and-then-install-it-if-its-not
-
-   #+begin_src sh  :results output :exports both
-   exec 2>&1;date;set -e; set -u; set -x
-
-   dpkg-query -l nginx || true
-   ansible web -s -m apt -a 'pkg=nginx state=absent' || true
-   dpkg-query -l nginx || true
-   #+end_src
-
-   #+RESULTS:
-   #+begin_example
-   Sat May 30 06:35:52 EDT 2015
-   + dpkg-query -l nginx
-   Desired=Unknown/Install/Remove/Purge/Hold
-   | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-   |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-   ||/ Name                                                  Version                                             Architecture Description
-   +++-=====================================================-===================================================-============-=====================================================================================================================================================================================================================
-   ii  nginx                                                 1.4.6-1ubuntu3.2                                    all          small, powerful, scalable web/proxy server
-   + ansible web -s -m apt -a 'pkg=nginx state=absent'
-   octo | success >> {
-       "changed": true, 
-       "stderr": "", 
-       "stdout": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nThe following packages were automatically installed and are no longer required:\n  gcc-4.8-base:i386 libasn1-8-heimdal:i386 libasound2:i386 libcgmanager0:i386\n  libcurl3:i386 libdbus-glib-1-2:i386 libdbusmenu-glib4:i386\n  libdbusmenu-gtk4:i386 libgconf-2-4:i386 libgssapi3-heimdal:i386\n  libhcrypto4-heimdal:i386 libheimbase1-heimdal:i386 libheimntlm0-heimdal:i386\n  libhx509-5-heimdal:i386 libidn11:i386 libkrb5-26-heimdal:i386\n  libldap-2.4-2:i386 libnspr4:i386 libnss3:i386 libpango1.0-0:i386\n  libpangox-1.0-0:i386 libpangoxft-1.0-0:i386 libroken18-heimdal:i386\n  librtmp0:i386 libsasl2-2:i386 libsasl2-modules:i386 libsasl2-modules-db:i386\n  libsqlite3-0:i386 libssl1.0.0:i386 libstdc++6:i386 libudev1:i386\n  libwind0-heimdal:i386 libxft2:i386 libxss1:i386 libxtst6:i386 nginx-common\n  nginx-core\nUse 'apt-get autoremove' to remove them.\nThe following packages will be REMOVED:\n  nginx\n0 upgraded, 0 newly installed, 1 to remove and 416 not upgraded.\nAfter this operation, 95.2 kB disk space will be freed.\n(Reading database ... 343348 files and directories currently installed.)\nRemoving nginx (1.4.6-1ubuntu3.2) ...\n"
-   }
-
-   + dpkg-query -l nginx
-   Desired=Unknown/Install/Remove/Purge/Hold
-   | Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-   |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-   ||/ Name                                                  Version                                             Architecture Description
-   +++-=====================================================-===================================================-============-=====================================================================================================================================================================================================================
-   un  nginx                                                 <none>                                              <none>       (no description available)
-#+end_example
-
-
-
-
-** Create a simple playbook to install nginx
-   #+begin_src sh  :results output :exports both
-   exec 2>&1;date;set -e; set -u; set -x
-   cat <<END > nginx.yml
----
-- hosts: localhost
-  tasks:
-   - name: Install Nginx
-     apt: pkg=nginx state=present update_cache=true
-
-END
-   echo nginx.yml
-   cat nginx.yml
-   #+end_src
-
-   #+RESULTS:
-   #+begin_example
-   Sat May 30 06:59:42 EDT 2015
-   + cat
-   + echo nginx.yml
-   nginx.yml
-   + cat nginx.yml
-   ---
-   - hosts: localhost
-     tasks:
-      - name: Install Nginx
-	apt: pkg=nginx state=present update_cache=true
-
-#+end_example
-
-
-* Run the simple nginx.yaml playbook
-  #+begin_src sh  :results output :exports both
-  exec 2>&1;date;set -e; set -u; set -x 
-  ansible-playbook -v -s nginx.yml 
-  echo Done.
-  #+end_src
-
-  #+RESULTS:
-  #+begin_example
-  Sat May 30 06:59:57 EDT 2015
-  + ansible-playbook -v -s nginx.yml
-
-  PLAY [localhost] ************************************************************** 
-
-  GATHERING FACTS *************************************************************** 
-  ok: [octo]
-
-  TASK: [Install Nginx] ********************************************************* 
-  ok: [octo] => {"changed": false}
-
-  PLAY RECAP ******************************************************************** 
-  octo                       : ok=2    changed=0    unreachable=0    failed=0   
-
-  + echo Done.
-  Done.
-#+end_example
-
-
 
