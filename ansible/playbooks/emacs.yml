@@ -5,6 +5,11 @@
     createuser: 'ansibleremote'
     createpassword: 'changethis' 
   tasks:
+  - name: Install requied packages for which order does not matter
+    apt: pkg={{ item }} state=installed update_cache=true
+    with_items:
+      - git
+    
   - name: Setup | set postfix selections wtihout prompting
     shell: echo postfix postfix/mailname string `hostname` | debconf-set-selections
     register: firstSelection
@@ -34,11 +39,7 @@
     command: ./autogen.sh chdir=~/git/emacs
     register: autogen
 
-
-
-#---
-#- hosts: default
-#  tasks:
-#  - name: Install elisp filess
-#    git: repo=https://github.com/eludom/elisp.git
-#    	 dest=/home/gmj/git
+    
+#./configure
+#make bootstrap
+#sudo make install
