@@ -1,0 +1,44 @@
+---
+- hosts: all
+  user: root
+  vars: 
+    createuser: 'ansibleremote'
+    createpassword: 'changethis' 
+  tasks:
+  - name: Setup | set postfix selections wtihout prompting
+    shell: echo postfix postfix/mailname string `hostname` | debconf-set-selections
+    register: firstSelection
+
+  - name: Setup | second selection
+    when: firstSelection|success
+    shell: echo postfix postfix/main_mailer_type string 'No configuration' | debconf-set-selections
+    register: secondSelection
+    
+  - name: Setup | install postfix
+    when: secondSelection|success
+    shell: apt-get install -y postfix
+    register: postfixInstalled
+
+  - name: Setup | install build dependencies for emacs
+    when: postfixInstalled
+    command: apt-get -y build-dep emacs23
+    register: depends
+
+  - name: Setup | install emacs sources
+    when: depends|success
+    git: repo=https://github.com/emacs-mirror/emacs.git accept_hostkey=true dest=~/git/emacs
+    register: src    
+
+  - name: Setup | autogen
+    when: src|success
+    command: ./autogen.sh chdir=~/git/emacs
+    register: autogen
+
+
+
+#---
+#- hosts: default
+#  tasks:
+#  - name: Install elisp filess
+#    git: repo=https://github.com/eludom/elisp.git
+#    	 dest=/home/gmj/git
