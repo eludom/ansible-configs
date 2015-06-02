@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-05-31 19:45:31 Sunday>
+#+DATE: <2015-06-02 05:21:30 Tuesday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -68,7 +68,7 @@
    #+end_src
 
    #+RESULTS:
-   : # Sun May 31 08:33:09 EDT 2015
+   : # Tue Jun  2 04:36:54 EDT 2015
    : export password=changethis
    : export ansibleDir=/home/george/ansible
    : export sshKeyName=ansible
@@ -114,7 +114,7 @@
    sudo service ssh restart
    #+end_example
    
-** [8/8] One time manual configuration of ansible master host
+** [9/9] One time manual configuration of ansible master host
 
     These are one-time setup functions on the ansible master:
 
@@ -314,8 +314,8 @@
    
    cd $ansibleDir
    cat <<END > hosts.password
-   [hosts]  
-   192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=${password}
+[hosts]  
+192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=${password}
 END
 
    cat hosts.password || true
@@ -323,9 +323,9 @@ END
    #+end_src
 
    #+RESULTS:
-   : # Sun May 31 16:32:25 EDT 2015
-   :    [hosts]  
-   :    192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=changethis
+   : # Tue Jun 2 04:42:24 EDT 2015
+   : [hosts]  
+   : 192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=changethis
 
 *** DONE Install sshpass
 
@@ -358,6 +358,44 @@ END
    0 upgraded, 0 newly installed, 0 to remove and 416 not upgraded.
 #+end_example
 
+*** DONE Disable host key checking
+   #+begin_src sh  :results output :exports code
+   exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
+   sudo sed -i 's/#host_key_checking = False/host_key_checking = False/' /etc/ansible/ansible.cfg
+   grep host_key_checking /etc/ansible/ansible.cfg
+   #+end_src
+
+   #+RESULTS:
+   : # Sun May 31 16:46:50 EDT 2015
+   : host_key_checking = False
+
+*** DONE Clear out any existing ssh host keys
+    - This is because I keep re-installing my test host and the keys
+      keep changing.
+    - May not want to do this in production
+    - I also tried setting
+
+      #+begin_example
+      host_key_checking = False      
+      #+end_example
+
+      in =/etc/ansible/ansible.cfg=, but it failed anyhow, so I'm
+      doing this too:
+
+      #+begin_src sh  :results output :exports both
+      exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
+      for host in `ansible -i hosts.password all -m ping --list-hosts`; do
+         echo removing ssh host key for $host
+	 ssh-keygen -f "/home/george/.ssh/known_hosts" -R $host || true
+      done
+      #+end_src
+
+      #+RESULTS:
+      : # Tue Jun 2 05:05:11 EDT 2015
+      : removing ssh host key for 192.168.1.100
+      : /home/george/.ssh/known_hosts updated.
+      : Original contents retained as /home/george/.ssh/known_hosts.old
+
 *** DONE Run some arbitrary code on all Ubuntu hosts
    #+begin_src sh  :results output :exports both
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
@@ -369,30 +407,19 @@ END
 
    #+RESULTS:
    #+begin_example
-   # Sun May 31 16:41:59 EDT 2015
+   # Tue Jun 2 05:05:34 EDT 2015
    192.168.1.100 | success >> {
        "changed": false, 
        "ping": "pong"
    }
 
    192.168.1.100 | success | rc=0 >>
-   Sun May 31 16:42:05 EDT 2015
+   Tue Jun  2 05:05:49 EDT 2015
 
    192.168.1.100 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
-
-*** DONE Disable host key checking
-   #+begin_src sh  :results output :exports code
-   exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
-   sudo sed -i 's/#host_key_checking = False/host_key_checking = False/' /etc/ansible/ansible.cfg
-   grep host_key_checking /etc/ansible/ansible.cfg
-   #+end_src
-
-   #+RESULTS:
-   : # Sun May 31 16:46:50 EDT 2015
-   : host_key_checking = False
 
 *** DONE Create an SSH key
 
@@ -525,21 +552,20 @@ END
    -rw-rw-r-- 1 george george 863 May 31 16:57 setup.yml
 #+end_example
 
-** Push out ssh keys and create accounts to managed hosts(s)
+** [/] Push out ssh keys and create accounts to managed hosts(s)
 
 *** DONE Run the playbook to install SSH keys and create accounts
    #+begin_src sh  :results output :exports both
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
-   ansible-playbook setup.yml    || true
-   echo hello world
+   ansible-playbook -i hosts.password setup.yml    || true
    #+end_src
 
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 16:58:12 EDT 2015
-   # Sun May 31 16:58:12 EDT 2015
-   + ansible-playbook setup.yml
+   + echo '#' Tue Jun 2 05:09:19 EDT 2015
+   # Tue Jun 2 05:09:19 EDT 2015
+   + ansible-playbook -i hosts.password setup.yml
 
    PLAY [all] ******************************************************************** 
 
@@ -561,8 +587,6 @@ END
    PLAY RECAP ******************************************************************** 
    192.168.1.100              : ok=5    changed=4    unreachable=0    failed=0   
 
-   + echo hello world
-   hello world
 #+end_example
 
 *** DONE Create an ansible hosts file that uses SSH credentials
@@ -583,8 +607,8 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 16:59:20 EDT 2015
-   # Sun May 31 16:59:20 EDT 2015
+   + echo '#' Tue Jun 2 05:10:58 EDT 2015
+   # Tue Jun 2 05:10:58 EDT 2015
    + echo sshKeyName is ansible
    sshKeyName is ansible
    + echo ansibleDir is /home/george/ansible
@@ -608,8 +632,8 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 17:00:44 EDT 2015
-   # Sun May 31 17:00:44 EDT 2015
+   + echo '#' Tue Jun 2 05:11:11 EDT 2015
+   # Tue Jun 2 05:11:11 EDT 2015
    + cd /home/george/ansible
    + ansible -i hosts.sshkeys all -m ping
    192.168.1.100 | success >> {
@@ -617,7 +641,7 @@ END
        "ping": "pong"
    }
 
-   #+end_example
+#+end_example
 
 
 
@@ -632,16 +656,45 @@ END
 
    #+RESULTS:
    #+begin_example
-   Sun May 31 17:52:05 EDT 2015
+   Tue Jun  2 05:11:31 EDT 2015
    + cd /home/george/ansible
    + ansible -i hosts.sshkeys all -s -m shell -a date
    192.168.1.100 | success | rc=0 >>
-   Sun May 31 17:52:14 EDT 2015
+   Tue Jun  2 05:11:33 EDT 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
    192.168.1.100 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
+#+end_example
+
+*** DONE Symlink /etc/ansible/hosts to hosts.sshkeys  :dir /sudo::
+
+   Symlink our hosts file with ssh keys into /etc/ansible/hosts so we
+   don't have to use -i all the time.
+
+   #+begin_src sh  :results output :exports code  :var ansibleDir=ansibleDir
+   exec 2>&1;date;set -e; set -u; set -x
+
+   echo foo || true
+   sudo rm -f /etc/ansible/hosts || true
+   sudo ln -s ${ansibleDir}/hosts.sshkeys /etc/ansible/hosts  || true
+   ls -l  /etc/ansible/hosts || true
+   cat /etc/ansible/hosts || true
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   Tue Jun  2 05:20:22 EDT 2015
+   + echo foo
+   foo
+   + sudo rm -f /etc/ansible/hosts
+   + sudo ln -s /home/george/ansible/hosts.sshkeys /etc/ansible/hosts
+   + ls -l /etc/ansible/hosts
+   lrwxrwxrwx 1 root root 34 Jun  2 05:20 /etc/ansible/hosts -> /home/george/ansible/hosts.sshkeys
+   + cat /etc/ansible/hosts
+   [default]  
+   192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
 #+end_example
 
 *** TODO Disable ssh password authentication on managed hosts
