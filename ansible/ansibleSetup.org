@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-06-02 05:21:30 Tuesday>
+#+DATE: <2015-06-02 05:24:34 Tuesday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -552,7 +552,7 @@ END
    -rw-rw-r-- 1 george george 863 May 31 16:57 setup.yml
 #+end_example
 
-** [/] Push out ssh keys and create accounts to managed hosts(s)
+** [7/7] Push out ssh keys and create accounts to managed hosts(s)
 
 *** DONE Run the playbook to install SSH keys and create accounts
    #+begin_src sh  :results output :exports both
@@ -697,7 +697,7 @@ END
    192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
 #+end_example
 
-*** TODO Disable ssh password authentication on managed hosts
+*** DONE Disable ssh password authentication on managed hosts
 
     If we can diable ssh password login, it means key-based
     authentication is working...
@@ -710,12 +710,33 @@ END
    #+end_src
 
    #+RESULTS:
-   : Sun May 31 17:12:32 EDT 2015
+   : Tue Jun  2 05:22:38 EDT 2015
    : + cd /home/george/ansible
    : + ansible -i hosts.sshkeys all -s -m shell -a 'sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config  && service ssh restart'
    : 192.168.1.100 | success | rc=0 >>
    : ssh stop/waiting
-   : ssh start/running, process 4465
+   : ssh start/running, process 4161
    : 
 
   
+*** DONE Verify that ssh key based ping still works, without -i
+   #+begin_src sh  :results output :exports both :var ansibleDir=ansibleDir
+   exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
+   cd $ansibleDir
+   ansible all -m ping || true
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   ++ date
+   + echo '#' Tue Jun 2 05:24:06 EDT 2015
+   # Tue Jun 2 05:24:06 EDT 2015
+   + cd /home/george/ansible
+   + ansible all -m ping
+   192.168.1.100 | success >> {
+       "changed": false, 
+       "ping": "pong"
+   }
+
+#+end_example
+
