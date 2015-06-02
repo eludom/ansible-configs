@@ -1,0 +1,20 @@
+* What
+  This is a quick list of things I've searched for related to ansible.
+  
+* Why
+  This will keep track of useful information.
+
+* Who  
+
+* When
+  As I go along.
+
+* Where
+  In a file "answers.org" in my ansible configuration directory.
+  Stored on github as well.
+
+* How
+** Ansible ignore host keys
+  - Question :: https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8&client=ubuntu#safe=active&q=ansible%20ignore%20host%20keys
+  - Winning answer :: http://docs.ansible.com/intro_configuration.html#host-key-checking
+
