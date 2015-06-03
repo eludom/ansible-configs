@@ -32,12 +32,30 @@
   - name: Setup | install emacs sources
     when: depends|success
     git: repo=https://github.com/emacs-mirror/emacs.git accept_hostkey=true dest=~/git/emacs
-    register: src    
+    register: src
+    become: no
 
   - name: Setup | autogen
     when: src|success
     command: ./autogen.sh chdir=~/git/emacs
     register: autogen
+    become: no
+
+  - name: Setup | configure
+    when: autogen|success
+    command: ./configure chdir=~/git/emacs
+    register: configure
+    become: no
+
+  - name: Setup | bootstrap
+    when: configure|success
+    command: make bootstrap chdir=~/git/emacs
+    register: bootstrap
+    become: no
+
+#  - name: Setup | install
+#    when: bootstrap|success
+#    command: make install chdir=~/git/emacs
 
     
 #./configure

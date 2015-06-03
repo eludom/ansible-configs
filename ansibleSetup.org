@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-06-02 05:24:34 Tuesday>
+#+DATE: <2015-06-03 19:43:45 Wednesday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -44,34 +44,49 @@
 
    #+NAME: ansibleDir
    #+begin_src sh  :results output :exports both
-   echo $HOME/ansible
+   pwd
    #+end_src
 
    #+RESULTS: ansibleDir
-   : /home/george/ansible
+   : /home/george/ansible-configs
 
    sshKeyName is the base name of the ssh key.
 
    #+NAME: sshKeyName
-   | ansible |
+   | ~/.ssh/20150603_aws.pem |
+
+   =sshUser= is the ssh user to log in as
+
+   #+NAME: sshUser
+   | ubuntu |
+
+   =sshHost= is the name or IP of an SSH host
+
+   #+NAME: sshHost
+   | 52.7.67.20 |
+
 
 ** Variables
 
    The scripts below use the following variables.  Your mileage may
    vary.   Source this if executing the scripts below.
 
-   #+begin_src sh  :results output :exports results  :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password
+   #+begin_src sh  :results output :exports results  :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password sshUser=sshUser sshHost=sshHost
    exec 2>&1;set -e; set -u; set +x; echo "# `date`"
    echo export password=${password}
    echo export ansibleDir=${ansibleDir}
    echo export sshKeyName=${sshKeyName}
+   echo export sshUser=${sshUser}
+   echo export sshHost=${sshHost}
    #+end_src
 
    #+RESULTS:
-   : # Tue Jun  2 04:36:54 EDT 2015
+   : # Wed Jun  3 19:15:24 EDT 2015
    : export password=changethis
-   : export ansibleDir=/home/george/ansible
-   : export sshKeyName=ansible
+   : export ansibleDir=/home/george/ansible-configs
+   : export sshKeyName=~/.ssh/20150603_aws.pem
+   : export sshUser=ubuntu
+   : export sshHost=52.7.67.20
 
 
 ** [4/4] Manual configuration of systems to be managed
@@ -490,11 +505,10 @@ END
 #+end_example
 
 
-
 *** DONE Create playbook to install SSH keys and create accounts
    Borrowed from http://www.hashbangcode.com/blog/ansible-ssh-setup-playbook 
 
-   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir :var sshKeyName=sshKeyName :var password=password
+   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password sshUser=sshUser sshHost=sshHost
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
    echo password is $password
    echo sshKeyName is $sshKeyName
@@ -506,7 +520,7 @@ END
 - hosts: all
   user: root
   vars: 
-    createuser: 'ansibleremote'
+    createuser: '$sshUser'
     createpassword: '$password' 
   tasks:
   - name: Setup | create user
@@ -533,24 +547,58 @@ END
     sudo: true
 END
    ls -l setup.yml
+   cat setup.yml
    #+end_src
 
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sun May 31 16:57:31 EDT 2015
-   # Sun May 31 16:57:31 EDT 2015
+   + echo '#' Wed Jun 3 19:27:20 EDT 2015
+   # Wed Jun 3 19:27:20 EDT 2015
    + echo password is changethis
    password is changethis
-   + echo sshKeyName is ansible
-   sshKeyName is ansible
-   + echo ansibleDir is /home/george/ansible
-   ansibleDir is /home/george/ansible
-   + cd /home/george/ansible
+   + echo sshKeyName is '~/.ssh/20150603_aws.pem'
+   sshKeyName is ~/.ssh/20150603_aws.pem
+   + echo ansibleDir is /home/george/ansible-configs
+   ansibleDir is /home/george/ansible-configs
+   + cd /home/george/ansible-configs
    + cat
    + ls -l setup.yml
-   -rw-rw-r-- 1 george george 863 May 31 16:57 setup.yml
+   -rw-rw-r-- 1 george george 872 Jun  3 19:27 setup.yml
+   + cat setup.yml
+   ---
+   - hosts: all
+     user: root
+     vars: 
+       createuser: 'ubuntu'
+       createpassword: 'changethis' 
+     tasks:
+     - name: Setup | create user
+       command: useradd -m {{ createuser }} creates=/home/{{ createuser }}
+       sudo: true
+
+     - name: Setup | set user password
+       shell: usermod -p $(echo '{{ createpassword }}' | openssl passwd -1 -stdin) {{ createuser }}
+       sudo: true
+
+     - name: Setup | authorized key upload
+       authorized_key: user={{ createuser }}
+	 key="{{ lookup('file', '~/.ssh/20150603_aws.pem.pub') }}"
+	 path='/home/{{ createuser }}/.ssh/authorized_keys'
+	 manage_dir=no
+       sudo: true
+
+     - name: Sudoers | update sudoers file and validate
+       lineinfile: "dest=/etc/sudoers
+	 insertafter=EOF
+	 line='{{ createuser }} ALL=(ALL) NOPASSWD: ALL'
+	 regexp='{{ createuser }} ALL=(ALL) NOPASSWD: ALL'
+	 state=present"
+       sudo: true
 #+end_example
+
+
+
 
 ** [7/7] Push out ssh keys and create accounts to managed hosts(s)
 
@@ -590,7 +638,7 @@ END
 #+end_example
 
 *** DONE Create an ansible hosts file that uses SSH credentials
-   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir :var sshKeyName=sshKeyName :var password=password
+   #+begin_src sh  :results output :exports code :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password sshUser=sshUser sshHost=sshHost
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
    echo sshKeyName is $sshKeyName
    echo ansibleDir is $ansibleDir
@@ -598,7 +646,7 @@ END
    cd $ansibleDir
    cat <<END > hosts.sshkeys
 [default]  
-192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=${sshKeyName}
+${sshHost} ansible_ssh_user=${sshUser} ansible_ssh_private_key_file=${sshKeyName}
 END
    echo hosts.sshkeys file is
    cat hosts.sshkeys
@@ -607,19 +655,19 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Tue Jun 2 05:10:58 EDT 2015
-   # Tue Jun 2 05:10:58 EDT 2015
-   + echo sshKeyName is ansible
-   sshKeyName is ansible
-   + echo ansibleDir is /home/george/ansible
-   ansibleDir is /home/george/ansible
-   + cd /home/george/ansible
+   + echo '#' Wed Jun 3 19:15:34 EDT 2015
+   # Wed Jun 3 19:15:34 EDT 2015
+   + echo sshKeyName is '~/.ssh/20150603_aws.pem'
+   sshKeyName is ~/.ssh/20150603_aws.pem
+   + echo ansibleDir is /home/george/ansible-configs
+   ansibleDir is /home/george/ansible-configs
+   + cd /home/george/ansible-configs
    + cat
    + echo hosts.sshkeys file is
    hosts.sshkeys file is
    + cat hosts.sshkeys
    [default]  
-   192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
+   52.7.67.20 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=~/.ssh/20150603_aws.pem
 #+end_example
 
 *** DONE Run ansible ping using ssh credentials
@@ -632,11 +680,11 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Tue Jun 2 05:11:11 EDT 2015
-   # Tue Jun 2 05:11:11 EDT 2015
-   + cd /home/george/ansible
+   + echo '#' Wed Jun 3 19:15:45 EDT 2015
+   # Wed Jun 3 19:15:45 EDT 2015
+   + cd /home/george/ansible-configs
    + ansible -i hosts.sshkeys all -m ping
-   192.168.1.100 | success >> {
+   52.7.67.20 | success >> {
        "changed": false, 
        "ping": "pong"
    }
@@ -656,14 +704,14 @@ END
 
    #+RESULTS:
    #+begin_example
-   Tue Jun  2 05:11:31 EDT 2015
-   + cd /home/george/ansible
+   Wed Jun  3 19:16:01 EDT 2015
+   + cd /home/george/ansible-configs
    + ansible -i hosts.sshkeys all -s -m shell -a date
-   192.168.1.100 | success | rc=0 >>
-   Tue Jun  2 05:11:33 EDT 2015
+   52.7.67.20 | success | rc=0 >>
+   Wed Jun  3 23:16:01 UTC 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
-   192.168.1.100 | success | rc=0 >>
+   52.7.67.20 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
