@@ -48,11 +48,22 @@
     register: pulled
     become: no
     tags:
+      - pull
+
+  - name: use file module to create a timestamp file for "now"
+    file: path="~/git/emacs/ansible.now" state=touch
+    tags:
+      - pull
+      
+  - stat: path=~/git/emacs/ansible.now
+    register: now
+    tags:
       - pull    
     
   - name: Setup | pull latest emacs sources
     when: depends|success and 
-          (not pulled.stat.exists)
+          ((not pulled.stat.exists) or
+           (pulled.stat.exists and pulled.stat.mtime  + secondsPerWeek < now.stat.mtime))
     git: repo=https://github.com/emacs-mirror/emacs.git accept_hostkey=true dest=~/git/emacs
     register: src
     become: no
