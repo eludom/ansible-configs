@@ -1,9 +1,6 @@
 ---
 - hosts: all
   user: root
-  vars: 
-    createuser: 'ansibleremote'
-    createpassword: 'changethis' 
   tasks:
   - name: Install requied packages for which order does not matter
     apt: pkg={{ item }} state=installed update_cache=true
@@ -53,9 +50,11 @@
     register: bootstrap
     become: no
 
-#  - name: Setup | install
-#    when: bootstrap|success
-#    command: make install chdir=~/git/emacs
+  - name: Setup | install
+    when: bootstrap|success
+    command: make install chdir={{ansible_user_dir}}/git/emacs
+    tags:
+	- install
 
     
 #./configure
