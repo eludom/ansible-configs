@@ -1,0 +1,58 @@
+# Use ansible to test the age of files relative to "now"
+# George Jones, Thu Jun  4 05:54:58 2015
+
+---
+- hosts: all
+  user: root
+  vars:
+    second: 1
+    minute: 60
+    tenMinutes: 600
+    thirtyMinutes: 1800
+    hour: 3600
+  tasks:
+
+
+# create two files, 5 seconds apart    
+    
+  - name: use file module to create a file "foo"
+    file: path="{{ ansible_user_dir }}/foo" state=touch
+
+  - wait_for: timeout=5
+    
+  - name: touch a file to get current date
+    command: touch "{{ ansible_user_dir }}/now"
+    become: no
+
+# get the mtime values of tie files
+
+  - stat: path="{{ ansible_user_dir }}/foo"
+    register: foo
+    
+  - stat: path="{{ ansible_user_dir }}/now"
+    register: now
+    
+# test and report on the relative age of the files
+
+  - debug: msg="foo is older than now"
+    when: foo.stat.mtime < now.stat.mtime
+
+  - debug: msg="foo is older than a second"
+    when: foo.stat.mtime < now.stat.mtime + second   
+
+  - debug: msg="foo is older than a minute"
+    when: foo.stat.mtime + minute < now.stat.mtime 
+
+  - debug: msg="foo is older than 10 minutes"
+    when: foo.stat.mtime + tenMinutes < now.stat.mtime 
+
+  - debug: msg="foo is older than 30 minutes"
+    when: foo.stat.mtime + thirtyMinutes < now.stat.mtime     
+    
+  - debug: msg="foo is older than an hour"
+    when: foo.stat.mtime + hour < now.stat.mtime 
+    
+    
+#./configure
+#make bootstrap
+#sudo make install
