@@ -78,11 +78,11 @@
       - pull
 
   - name: use file module to create a timestamp file for "now"
-    file: path="~/git/emacs/ansible.now" state=touch
+    file: path="~/ansible.now" state=touch
     tags:
       - pull
       
-  - stat: path=~/git/emacs/ansible.now
+  - stat: path=~/ansible.now
     register: now
     tags:
       - pull    
