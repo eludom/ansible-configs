@@ -1,14 +1,10 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-06-03 19:43:45 Wednesday>
+#+DATE: <2015-06-13 05:03:56 Saturday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
 * What
-  This file contains scripts that set up SSH on an Ubuntu 14.04 client
-  and install ansible on a master.   Initial set up is done with
-  passwords.  SSH keys are generated, an ansible account is created on
-  teh client, keys are pushed and ssh password authentication is
-  disabled.
+  This provides a collection of small scripts to install ansible
 
 * Why
   Getting the SSH setup repeatably right is harder than is should be.
@@ -53,7 +49,7 @@
    sshKeyName is the base name of the ssh key.
 
    #+NAME: sshKeyName
-   | ~/.ssh/20150603_aws.pem |
+   | ~/.ssh/20150604_ansible       |
 
    =sshUser= is the ssh user to log in as
 
@@ -63,7 +59,7 @@
    =sshHost= is the name or IP of an SSH host
 
    #+NAME: sshHost
-   | 52.7.67.20 |
+   | 10.0.0.3   |
 
 
 ** Variables
@@ -81,10 +77,10 @@
    #+end_src
 
    #+RESULTS:
-   : # Wed Jun  3 19:15:24 EDT 2015
+   : # Fri Jun  5 18:22:46 EDT 2015
    : export password=changethis
    : export ansibleDir=/home/george/ansible-configs
-   : export sshKeyName=~/.ssh/20150603_aws.pem
+   : export sshKeyName=${HOME}/.ssh/20150604_ansible
    : export sshUser=ubuntu
    : export sshHost=52.7.67.20
 
@@ -330,7 +326,7 @@
    cd $ansibleDir
    cat <<END > hosts.password
 [hosts]  
-192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=${password}
+10.0.0.3 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=${password}
 END
 
    cat hosts.password || true
@@ -338,9 +334,9 @@ END
    #+end_src
 
    #+RESULTS:
-   : # Tue Jun 2 04:42:24 EDT 2015
+   : # Sat Jun 13 04:42:34 EDT 2015
    : [hosts]  
-   : 192.168.1.100 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=changethis
+   : 10.0.0.3 ansible_connection=ssh ansible_ssh_user=root ansible_ssh_pass=changethis
 
 *** DONE Install sshpass
 
@@ -381,7 +377,7 @@ END
    #+end_src
 
    #+RESULTS:
-   : # Sun May 31 16:46:50 EDT 2015
+   : # Fri Jun 5 18:14:39 EDT 2015
    : host_key_checking = False
 
 *** DONE Clear out any existing ssh host keys
@@ -399,39 +395,44 @@ END
 
       #+begin_src sh  :results output :exports both
       exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
-      for host in `ansible -i hosts.password all -m ping --list-hosts`; do
+      for host in `ansible -i hosts all -m ping --list-hosts`; do
          echo removing ssh host key for $host
 	 ssh-keygen -f "/home/george/.ssh/known_hosts" -R $host || true
       done
       #+end_src
 
       #+RESULTS:
-      : # Tue Jun 2 05:05:11 EDT 2015
+      : # Sat Jun 13 04:42:53 EDT 2015
+      : removing ssh host key for 52.7.67.20
+      : /home/george/.ssh/known_hosts updated.
+      : Original contents retained as /home/george/.ssh/known_hosts.old
+      : # Host 52.7.67.20 found: line 21 type ECDSA
       : removing ssh host key for 192.168.1.100
       : /home/george/.ssh/known_hosts updated.
       : Original contents retained as /home/george/.ssh/known_hosts.old
+      : # Host 192.168.1.100 found: line 20 type ECDSA
 
 *** DONE Run some arbitrary code on all Ubuntu hosts
    #+begin_src sh  :results output :exports both
    exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
 
    ansible -i hosts.password all -m ping || true
-   ansible -i hosts.password all -s -m shell -a 'date' || true
-   ansible -i hosts.password all -s -m shell -a 'id' || true
+   ansible -i hosts.password  all -s -m shell -a 'date' || true
+   ansible -i hosts.password  all -s -m shell -a 'id' || true
    #+end_src
 
    #+RESULTS:
    #+begin_example
-   # Tue Jun 2 05:05:34 EDT 2015
-   192.168.1.100 | success >> {
+   # Sat Jun 13 04:52:44 EDT 2015
+   10.0.0.3 | success >> {
        "changed": false, 
        "ping": "pong"
    }
 
-   192.168.1.100 | success | rc=0 >>
-   Tue Jun  2 05:05:49 EDT 2015
+   10.0.0.3 | success | rc=0 >>
+   Sat Jun 13 04:52:48 EDT 2015
 
-   192.168.1.100 | success | rc=0 >>
+   10.0.0.3 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
@@ -464,44 +465,30 @@ END
     #+RESULTS:
     #+begin_example
     ++ date
-    + echo '#' Sun May 31 16:55:39 EDT 2015
-    # Sun May 31 16:55:39 EDT 2015
-    + cd /home/george/ansible
+    + echo '#' Fri Jun 5 18:18:53 EDT 2015
+    # Fri Jun 5 18:18:53 EDT 2015
+    + cd /home/george/ansible-configs
     + pwd
-    /home/george/ansible
-    + '[' '!' -f ansible.pub ']'
+    /home/george/ansible-configs
+    + '[' '!' -f '~/.ssh/20150604_ansible.pub' ']'
     + echo creating ssh key
     creating ssh key
     ++ date +%Y%m%d
     ++ hostname
-    + comment='20150531 ansibleremote@octo'
-    + echo comment 20150531 ansibleremote@octo
-    comment 20150531 ansibleremote@octo
-    + ssh-keygen -f ansible -C '20150531 ansibleremote@octo' -N ''
+    + comment='20150605 ansibleremote@octo'
+    + echo comment 20150605 ansibleremote@octo
+    comment 20150605 ansibleremote@octo
+    + ssh-keygen -f '~/.ssh/20150604_ansible' -C '20150605 ansibleremote@octo' -N ''
+    open ~/.ssh/20150604_ansible failed: No such file or directory.
     Generating public/private rsa key pair.
-    Your identification has been saved in ansible.
-    Your public key has been saved in ansible.pub.
-    The key fingerprint is:
-    72:52:fe:92:b0:25:f5:d6:83:5d:39:e7:b1:d0:1d:2f 20150531 ansibleremote@octo
-    The key's randomart image is:
-    +--[ RSA 2048]----+
-    |               . |
-    |              ..+|
-    |        o    .Eo+|
-    |       + . + ..=o|
-    |      = S + +  ..|
-    |       O +   .   |
-    |      . o .      |
-    |         .       |
-    |                 |
-    +-----------------+
-    + ls -l ansible ansibleExperiments.html ansibleExperiments.org ansible.pub
-    -rw------- 1 george george  1675 May 31 16:55 ansible
-    -rw-rw-r-- 1 george george 29028 May 31 16:06 ansibleExperiments.html
-    -rw-rw-r-- 1 george george 76343 May 31 16:32 ansibleExperiments.org
-    -rw-r--r-- 1 george george   409 May 31 16:55 ansible.pub
-    + cat ansible.pub
-    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCwpxzZdurc7aLrLWfozvzEp2VXucosneY8ib9y/HAtV0KV7I+88vRaHR+M8BvVqPqM1bBDuUQdYijZRXFbdiVBiUIEXMQCQvqQFEq+Y+FLn5RGDgWrELH0YZmc8+FgHzkxSGfXDoWgTQWJJvJxzqhPnWd+YxIAzPeCr+crtugEWJWFzz87xCmgAvvp5fMWGXHNZwnbplToxLEuo72LrgbRImoSCRrjsfEjwFjpL3Quf/HVd4ip20KwdXIDWREb/QN0wmN2MV+O368YXXo/+Y6E4HDoqcu+zPMwFdieUiT+P9RomPrStloot8CDUN+4s6RAmkHTcGU7ozNRvKDz8r1N 20150531 ansibleremote@octo
+    Saving the key failed: ~/.ssh/20150604_ansible.
+    + true
+    + ls -l '~/.ssh/20150604_ansible*'
+    ls: cannot access ~/.ssh/20150604_ansible*: No such file or directory
+    + true
+    + cat '~/.ssh/20150604_ansible.pub'
+    cat: ~/.ssh/20150604_ansible.pub: No such file or directory
+    + true
 #+end_example
 
 
@@ -553,18 +540,18 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Wed Jun 3 19:27:20 EDT 2015
-   # Wed Jun 3 19:27:20 EDT 2015
+   + echo '#' Sat Jun 13 04:54:08 EDT 2015
+   # Sat Jun 13 04:54:08 EDT 2015
    + echo password is changethis
    password is changethis
-   + echo sshKeyName is '~/.ssh/20150603_aws.pem'
-   sshKeyName is ~/.ssh/20150603_aws.pem
+   + echo sshKeyName is '~/.ssh/20150604_ansible'
+   sshKeyName is ~/.ssh/20150604_ansible
    + echo ansibleDir is /home/george/ansible-configs
    ansibleDir is /home/george/ansible-configs
    + cd /home/george/ansible-configs
    + cat
    + ls -l setup.yml
-   -rw-rw-r-- 1 george george 872 Jun  3 19:27 setup.yml
+   -rw-rw-r-- 1 george george 872 Jun 13 04:54 setup.yml
    + cat setup.yml
    ---
    - hosts: all
@@ -583,7 +570,7 @@ END
 
      - name: Setup | authorized key upload
        authorized_key: user={{ createuser }}
-	 key="{{ lookup('file', '~/.ssh/20150603_aws.pem.pub') }}"
+	 key="{{ lookup('file', '~/.ssh/20150604_ansible.pub') }}"
 	 path='/home/{{ createuser }}/.ssh/authorized_keys'
 	 manage_dir=no
        sudo: true
@@ -611,29 +598,29 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Tue Jun 2 05:09:19 EDT 2015
-   # Tue Jun 2 05:09:19 EDT 2015
+   + echo '#' Sat Jun 13 04:55:05 EDT 2015
+   # Sat Jun 13 04:55:05 EDT 2015
    + ansible-playbook -i hosts.password setup.yml
 
    PLAY [all] ******************************************************************** 
 
    GATHERING FACTS *************************************************************** 
-   ok: [192.168.1.100]
+   ok: [10.0.0.3]
 
    TASK: [Setup | create user] *************************************************** 
-   changed: [192.168.1.100]
+   changed: [10.0.0.3]
 
    TASK: [Setup | set user password] ********************************************* 
-   changed: [192.168.1.100]
+   changed: [10.0.0.3]
 
    TASK: [Setup | authorized key upload] ***************************************** 
-   changed: [192.168.1.100]
+   changed: [10.0.0.3]
 
    TASK: [Sudoers | update sudoers file and validate] **************************** 
-   changed: [192.168.1.100]
+   changed: [10.0.0.3]
 
    PLAY RECAP ******************************************************************** 
-   192.168.1.100              : ok=5    changed=4    unreachable=0    failed=0   
+   10.0.0.3                   : ok=5    changed=4    unreachable=0    failed=0   
 
 #+end_example
 
@@ -655,10 +642,10 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Wed Jun 3 19:15:34 EDT 2015
-   # Wed Jun 3 19:15:34 EDT 2015
-   + echo sshKeyName is '~/.ssh/20150603_aws.pem'
-   sshKeyName is ~/.ssh/20150603_aws.pem
+   + echo '#' Sat Jun 13 04:55:33 EDT 2015
+   # Sat Jun 13 04:55:33 EDT 2015
+   + echo sshKeyName is '~/.ssh/20150604_ansible'
+   sshKeyName is ~/.ssh/20150604_ansible
    + echo ansibleDir is /home/george/ansible-configs
    ansibleDir is /home/george/ansible-configs
    + cd /home/george/ansible-configs
@@ -667,7 +654,7 @@ END
    hosts.sshkeys file is
    + cat hosts.sshkeys
    [default]  
-   52.7.67.20 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=~/.ssh/20150603_aws.pem
+   10.0.0.3 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=~/.ssh/20150604_ansible
 #+end_example
 
 *** DONE Run ansible ping using ssh credentials
@@ -680,11 +667,11 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Wed Jun 3 19:15:45 EDT 2015
-   # Wed Jun 3 19:15:45 EDT 2015
+   + echo '#' Sat Jun 13 04:55:42 EDT 2015
+   # Sat Jun 13 04:55:42 EDT 2015
    + cd /home/george/ansible-configs
    + ansible -i hosts.sshkeys all -m ping
-   52.7.67.20 | success >> {
+   10.0.0.3 | success >> {
        "changed": false, 
        "ping": "pong"
    }
@@ -704,14 +691,14 @@ END
 
    #+RESULTS:
    #+begin_example
-   Wed Jun  3 19:16:01 EDT 2015
+   Sat Jun 13 04:55:57 EDT 2015
    + cd /home/george/ansible-configs
    + ansible -i hosts.sshkeys all -s -m shell -a date
-   52.7.67.20 | success | rc=0 >>
-   Wed Jun  3 23:16:01 UTC 2015
+   10.0.0.3 | success | rc=0 >>
+   Sat Jun 13 04:55:57 EDT 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
-   52.7.67.20 | success | rc=0 >>
+   10.0.0.3 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
@@ -754,16 +741,16 @@ END
    exec 2>&1;date;set -e; set -u; set -x
 
    cd $ansibleDir
-   ansible -i hosts.sshkeys all -s -m shell -a 'sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config  && service ssh restart' || true
+   ansible -i hosts.sshkeys all -s -m shell -a 'sed -i "s/#PasswordAuthentication.*/PasswordAuthentication no/" /etc/ssh/sshd_config  && service ssh restart' || true
    #+end_src
 
    #+RESULTS:
-   : Tue Jun  2 05:22:38 EDT 2015
-   : + cd /home/george/ansible
-   : + ansible -i hosts.sshkeys all -s -m shell -a 'sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config  && service ssh restart'
-   : 192.168.1.100 | success | rc=0 >>
+   : Sat Jun 13 05:01:18 EDT 2015
+   : + cd /home/george/ansible-configs
+   : + ansible -i hosts.sshkeys all -s -m shell -a 'sed -i "s/#PasswordAuthentication.*/PasswordAuthentication no/" /etc/ssh/sshd_config  && service ssh restart'
+   : 10.0.0.3 | success | rc=0 >>
    : ssh stop/waiting
-   : ssh start/running, process 4161
+   : ssh start/running, process 31140
    : 
 
   
@@ -771,20 +758,30 @@ END
    #+begin_src sh  :results output :exports both :var ansibleDir=ansibleDir
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
    cd $ansibleDir
-   ansible all -m ping || true
+   ansible all -i hosts.sshkeys -m ping || true
+   ansible -i hosts.sshkeys  all -s -m shell -a 'date' || true
+   ansible -i hosts.sshkeys  all -s -m shell -a 'id' || true
    #+end_src
 
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Tue Jun 2 05:24:06 EDT 2015
-   # Tue Jun 2 05:24:06 EDT 2015
-   + cd /home/george/ansible
-   + ansible all -m ping
-   192.168.1.100 | success >> {
+   + echo '#' Sat Jun 13 05:03:41 EDT 2015
+   # Sat Jun 13 05:03:41 EDT 2015
+   + cd /home/george/ansible-configs
+   + ansible all -i hosts.sshkeys -m ping
+   10.0.0.3 | success >> {
        "changed": false, 
        "ping": "pong"
    }
+
+   + ansible -i hosts.sshkeys all -s -m shell -a date
+   10.0.0.3 | success | rc=0 >>
+   Sat Jun 13 05:03:43 EDT 2015
+
+   + ansible -i hosts.sshkeys all -s -m shell -a id
+   10.0.0.3 | success | rc=0 >>
+   uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
 
