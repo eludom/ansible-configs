@@ -1,0 +1,18 @@
+* What
+  This is an ansible role to install the lastet org mode.
+* Why
+  Because things are fixed in the source that take time to get into
+  the packaged/released versions.
+
+* Who
+  Myself.
+
+* When
+  When I install a new system.
+
+* Where
+  On the new system
+
+* How
+  Ansible.
+
