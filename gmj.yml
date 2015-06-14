@@ -30,3 +30,5 @@
   roles:
     - ntp
     - utils
+#    - { role: emacs, tags: ["emacs"] }    
+    - { role: dotfiles, tags: ["dotfiles"] }        
