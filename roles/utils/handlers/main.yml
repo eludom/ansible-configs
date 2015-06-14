@@ -1,0 +1,9 @@
+---
+- name: Start NTP
+  service: name=ntp state=started enabled=yes
+  tags: ntp  
+
+- name: Stop NTP
+  service: name=ntp state=stopped enabled=yes
+  tags: ntp
+  

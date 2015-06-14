@@ -1,0 +1,121 @@
+---
+- name: Install git
+  become: yes  
+  apt: pkg={{ item }} state=installed update_cache=true
+  with_items:
+    - git
+  tags:
+    - setup
+
+- name: Install requied packages for which order does not matter
+  become: yes  
+  apt: pkg={{ item }} state=installed update_cache=true
+  with_items:
+    - git
+  tags:
+    - setup      
+    
+- name: Setup | set postfix selections wtihout prompting
+  become: yes  
+  shell: echo postfix postfix/mailname string `hostname` | debconf-set-selections
+  register: firstSelection
+  tags:
+    - setup          
+
+- name: Setup | second selection
+  become: yes  
+  when: firstSelection|success
+  shell: echo postfix postfix/main_mailer_type string 'No configuration' | debconf-set-selections
+  register: secondSelection
+  tags:
+    - setup          
+    
+- name: Setup | install postfix
+  become: yes  
+  when: secondSelection|success
+  shell: apt-get install -y postfix
+  register: postfixInstalled
+  tags:
+    - setup          
+
+- name: Setup | install build dependencies for emacs
+  become: yes  
+  when: postfixInstalled
+  command: apt-get -y build-dep emacs23
+  register: depends
+  tags:
+    - setup          
+
+# Pull emacs sources, but no more often than once a week
+    
+- stat: path=~/git/emacs/ansible.emacs_source_pulled
+  register: pulled
+  become: no
+  tags:
+    - pull
+
+- name: use file module to create a timestamp file for "now"
+  file: path="~/ansible.now" state=touch
+  tags:
+    - pull
+      
+- stat: path=~/ansible.now
+  register: now
+  tags:
+    - pull    
+    
+- name: Setup | pull latest emacs sources
+  when: depends|success and 
+        ((not pulled.stat.exists) or
+         (pulled.stat.exists and pulled.stat.mtime  + secondsPerWeek < now.stat.mtime))
+  git: repo=https://github.com/emacs-mirror/emacs.git accept_hostkey=true dest=~/git/emacs
+  register: src
+  become: no
+  tags:
+    - pull    
+
+- name: Setup | remember when we last pulled emacs sources
+  file: path=~/git/emacs/ansible.emacs_source_pulled  state=touch
+  when: src|success and (not src|skipped)
+  become: no
+  tags:
+    - pull
+
+
+# build from source just pulled.  These take a while
+
+- name: Setup | autogen
+  when: src|success
+  command: ./autogen.sh chdir=~/git/emacs
+  register: autogen
+  become: no
+  tags:
+    - build
+    
+
+- name: Setup | configure
+  when: autogen|success
+  command: ./configure chdir=~/git/emacs
+  register: configure
+  become: no
+  tags:
+    - build
+
+- name: Setup | bootstrap
+  when: configure|success
+  command: make bootstrap chdir=~/git/emacs
+  register: bootstrap
+  become: no
+  tags:
+    - build    
+
+
+# install
+
+- name: Setup | install
+  become: no # to keep ~ right, but sudo to get root....
+  when: bootstrap is not defined or bootstrap|success
+  command: sudo make install chdir=~/git/emacs
+  tags:
+    - install
+    

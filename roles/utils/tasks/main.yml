@@ -1,0 +1,5 @@
+---
+- name: Install packages I use most of the time
+  apt: pkg={{ item }} state=installed update_cache=false
+  with_items:
+    - git
