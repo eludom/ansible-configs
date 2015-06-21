@@ -1,7 +1,7 @@
 ---
 - debug: msg="ntp_host {{ ntp_host }}"
 
-- name: Install ntp and ntpdate
+- name: Install | ntp config
   apt: pkg={{ item }} state=installed update_cache=false
   with_items:
     - ntp

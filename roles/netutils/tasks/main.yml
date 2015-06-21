@@ -4,6 +4,8 @@
   with_items:
     - nmap
     - tshark
+    - traceroute
+    
 
     
     

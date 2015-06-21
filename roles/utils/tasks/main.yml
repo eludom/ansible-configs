@@ -5,7 +5,19 @@
     - git
     - gnutls-bin
 
-- name: copy script to fix ctrl
-        copy: src=/home/george/bin/fixctrl.sh dest=/home/george/bin/fixctrl.sh owner=foo group=foo mode=0644    
+
+- name: Install | create directory for fixctrl script
+  file: path=/home/george/bin state=directory    
+
+- name: Install | copy fixctrl script
+  copy: src=/home/george/bin/fixctrl.sh dest=/home/george/bin/fixctrl.sh mode=755
+  tags:  
+      - fixctrl
+
+- name: "Fix ctrl key system-wide"
+  lineinfile: dest=/etc/bash.bashrc line='if [ -n "$DISPLAY" ]; then /usr/bin/setxkbmap -option 'ctrl:nocaps' ; fi' state=present
+  tags:
+    - fixctrl
+        
     
     
