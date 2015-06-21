@@ -1,11 +1,11 @@
 ---
-- name: Install packages I use most of the time
+- name: Install | Utilities
   apt: pkg={{ item }} state=installed update_cache=false
   with_items:
     - git
-    - chromium-browser
     - gnutls-bin
-    - ispell
-    - whois
+
+- name: copy script to fix ctrl
+        copy: src=/home/george/bin/fixctrl.sh dest=/home/george/bin/fixctrl.sh owner=foo group=foo mode=0644    
     
     

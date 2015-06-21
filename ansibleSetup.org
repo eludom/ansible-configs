@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-06-13 05:03:56 Saturday>
+#+DATE: <2015-06-21 05:58:53 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -59,7 +59,7 @@
    =sshHost= is the name or IP of an SSH host
 
    #+NAME: sshHost
-   | 10.0.0.3   |
+   | 10.0.0.102 |
 
 
 ** Variables
@@ -77,12 +77,12 @@
    #+end_src
 
    #+RESULTS:
-   : # Fri Jun  5 18:22:46 EDT 2015
+   : # Sun Jun 21 04:08:44 EDT 2015
    : export password=changethis
-   : export ansibleDir=/home/george/ansible-configs
-   : export sshKeyName=${HOME}/.ssh/20150604_ansible
+   : export ansibleDir=/home/george/git/github.com/eludom/ansible-configs
+   : export sshKeyName=~/.ssh/20150604_ansible
    : export sshUser=ubuntu
-   : export sshHost=52.7.67.20
+   : export sshHost=10.0.0.102
 
 
 ** [4/4] Manual configuration of systems to be managed
@@ -99,6 +99,7 @@
      Also install VM tools if appropriate (VMWare, VirtualBox, etc).
      At this point, I snapshot the VM.
 
+*** TODO Install V(Mware|Box) tools if needed
 *** DONE Set the root password
 
      Set the root password to something we know because we're going to
@@ -598,29 +599,29 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sat Jun 13 04:55:05 EDT 2015
-   # Sat Jun 13 04:55:05 EDT 2015
+   + echo '#' Sun Jun 21 04:06:42 EDT 2015
+   # Sun Jun 21 04:06:42 EDT 2015
    + ansible-playbook -i hosts.password setup.yml
 
    PLAY [all] ******************************************************************** 
 
    GATHERING FACTS *************************************************************** 
-   ok: [10.0.0.3]
+   ok: [10.0.0.102]
 
    TASK: [Setup | create user] *************************************************** 
-   changed: [10.0.0.3]
+   changed: [10.0.0.102]
 
    TASK: [Setup | set user password] ********************************************* 
-   changed: [10.0.0.3]
+   changed: [10.0.0.102]
 
    TASK: [Setup | authorized key upload] ***************************************** 
-   changed: [10.0.0.3]
+   changed: [10.0.0.102]
 
    TASK: [Sudoers | update sudoers file and validate] **************************** 
-   changed: [10.0.0.3]
+   changed: [10.0.0.102]
 
    PLAY RECAP ******************************************************************** 
-   10.0.0.3                   : ok=5    changed=4    unreachable=0    failed=0   
+   10.0.0.102                 : ok=5    changed=4    unreachable=0    failed=0   
 
 #+end_example
 
@@ -642,19 +643,19 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sat Jun 13 04:55:33 EDT 2015
-   # Sat Jun 13 04:55:33 EDT 2015
+   + echo '#' Sun Jun 21 04:09:06 EDT 2015
+   # Sun Jun 21 04:09:06 EDT 2015
    + echo sshKeyName is '~/.ssh/20150604_ansible'
    sshKeyName is ~/.ssh/20150604_ansible
-   + echo ansibleDir is /home/george/ansible-configs
-   ansibleDir is /home/george/ansible-configs
-   + cd /home/george/ansible-configs
+   + echo ansibleDir is /home/george/git/github.com/eludom/ansible-configs
+   ansibleDir is /home/george/git/github.com/eludom/ansible-configs
+   + cd /home/george/git/github.com/eludom/ansible-configs
    + cat
    + echo hosts.sshkeys file is
    hosts.sshkeys file is
    + cat hosts.sshkeys
    [default]  
-   10.0.0.3 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=~/.ssh/20150604_ansible
+   10.0.0.102 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=~/.ssh/20150604_ansible
 #+end_example
 
 *** DONE Run ansible ping using ssh credentials
@@ -667,11 +668,11 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sat Jun 13 04:55:42 EDT 2015
-   # Sat Jun 13 04:55:42 EDT 2015
-   + cd /home/george/ansible-configs
+   + echo '#' Sun Jun 21 04:09:19 EDT 2015
+   # Sun Jun 21 04:09:19 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
    + ansible -i hosts.sshkeys all -m ping
-   10.0.0.3 | success >> {
+   10.0.0.102 | success >> {
        "changed": false, 
        "ping": "pong"
    }
@@ -691,14 +692,14 @@ END
 
    #+RESULTS:
    #+begin_example
-   Sat Jun 13 04:55:57 EDT 2015
-   + cd /home/george/ansible-configs
+   Sun Jun 21 04:09:52 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
    + ansible -i hosts.sshkeys all -s -m shell -a date
-   10.0.0.3 | success | rc=0 >>
-   Sat Jun 13 04:55:57 EDT 2015
+   10.0.0.102 | success | rc=0 >>
+   Sun Jun 21 04:09:52 EDT 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
-   10.0.0.3 | success | rc=0 >>
+   10.0.0.102 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example
@@ -720,16 +721,16 @@ END
 
    #+RESULTS:
    #+begin_example
-   Tue Jun  2 05:20:22 EDT 2015
+   Sun Jun 21 04:09:29 EDT 2015
    + echo foo
    foo
    + sudo rm -f /etc/ansible/hosts
-   + sudo ln -s /home/george/ansible/hosts.sshkeys /etc/ansible/hosts
+   + sudo ln -s /home/george/git/github.com/eludom/ansible-configs/hosts.sshkeys /etc/ansible/hosts
    + ls -l /etc/ansible/hosts
-   lrwxrwxrwx 1 root root 34 Jun  2 05:20 /etc/ansible/hosts -> /home/george/ansible/hosts.sshkeys
+   lrwxrwxrwx 1 root root 64 Jun 21 04:09 /etc/ansible/hosts -> /home/george/git/github.com/eludom/ansible-configs/hosts.sshkeys
    + cat /etc/ansible/hosts
    [default]  
-   192.168.1.100 ansible_ssh_user=ansibleremote ansible_ssh_private_key_file=ansible
+   10.0.0.102 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=~/.ssh/20150604_ansible
 #+end_example
 
 *** DONE Disable ssh password authentication on managed hosts
@@ -753,7 +754,11 @@ END
    : ssh start/running, process 31140
    : 
 
-  
+#+begin_src sh  :results output :exports both
+exec 2>&1;set -e; set -u; set +x; echo '#' `date;`
+
+echo hello world
+#+end_src  
 *** DONE Verify that ssh key based ping still works, without -i
    #+begin_src sh  :results output :exports both :var ansibleDir=ansibleDir
    exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
@@ -766,21 +771,21 @@ END
    #+RESULTS:
    #+begin_example
    ++ date
-   + echo '#' Sat Jun 13 05:03:41 EDT 2015
-   # Sat Jun 13 05:03:41 EDT 2015
-   + cd /home/george/ansible-configs
+   + echo '#' Sun Jun 21 04:10:21 EDT 2015
+   # Sun Jun 21 04:10:21 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
    + ansible all -i hosts.sshkeys -m ping
-   10.0.0.3 | success >> {
+   10.0.0.102 | success >> {
        "changed": false, 
        "ping": "pong"
    }
 
    + ansible -i hosts.sshkeys all -s -m shell -a date
-   10.0.0.3 | success | rc=0 >>
-   Sat Jun 13 05:03:43 EDT 2015
+   10.0.0.102 | success | rc=0 >>
+   Sun Jun 21 04:10:22 EDT 2015
 
    + ansible -i hosts.sshkeys all -s -m shell -a id
-   10.0.0.3 | success | rc=0 >>
+   10.0.0.102 | success | rc=0 >>
    uid=0(root) gid=0(root) groups=0(root)
 
 #+end_example

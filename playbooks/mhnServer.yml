@@ -1,0 +1,71 @@
+# Install modern honey nework server
+
+
+
+---
+- hosts: gmj
+  tasks:
+  - name: Setup | mhn src
+    git: repo=https://github.com/threatstream/mhn.git  accept_hostkey=true dest=/opt/mhn
+    register: src
+    become: yes
+    tags:
+      - pull    
+    
+
+
+# See https://github.com/threatstream/mhn/wiki/Getting-up-and-running-using-Vagrant
+#
+## from your "mhn" directory
+#$ vagrant ssh server
+#
+## you should now be logged into the server VM
+#$ sudo su -
+#$ apt-get install -y git
+#$ cd /opt/
+#$ git clone https://github.com/threatstream/mhn.git
+#$ cd mhn/scripts
+#$ ./install_hpfeeds.sh ; ./install_mnemosyne.sh ; ./install_honeymap.sh
+#
+## After this, check the supervisor process to make it all components were installed
+## Your output should look like mine
+#$ supervisorctl status
+#geoloc                           RUNNING    pid 29334, uptime 0:02:22
+#honeymap                         RUNNING    pid 29335, uptime 0:02:22
+#hpfeeds-broker                   RUNNING    pid 10253, uptime 0:07:33
+#mnemosyne                        RUNNING    pid 28222, uptime 0:06:09
+#
+#Now, this is very important. Since this is a private network deployment, you need to change a mnemosyne config option to support this. Edit /opt/mnemosyne/mnemosyne.cfg and change ignore_rfc1918 to False. It defaults to True because MHN is primarily used for public facing deployments.
+#
+#[normalizer]
+#ignore_rfc1918 = False
+#Now restart mnemosyne:
+#
+#$ supervisorctl restart mnemosyne
+#Now install MHN Server:
+#
+#$ ./install_mhnserver.sh
+#
+## When you get to the config portion, use the same options (expect the email/password)
+## Note: Use 10.254.254.100 for server urls):
+#
+#===========================================================
+#  MHN Configuration
+#===========================================================
+#Do you wish to run in Debug mode?: y/n n
+#Superuser email: YOUR-EMAIL@YOUR-SITE.com
+#Superuser password: 
+#Superuser password: (again): 
+#Server base url ["http://1.2.3.5"]: http://10.254.254.100
+#Honeymap url ["http://1.2.3.5:3000"]: http://10.254.254.100:3000
+#Mail server address ["localhost"]: 
+#Mail server port [25]: 
+#Use TLS for email?: y/n y
+#Use SSL for email?: y/n y
+#Mail server username [""]:  
+#Mail server password [""]: 
+#Mail default sender [""]: 
+#Path for log file ["mhn.log"]: 
+#
+## Wait for the script to finish.
+#Now open a web browser and visit http://10.254.254.100, login with the credentials created during #MHN configuration above.
