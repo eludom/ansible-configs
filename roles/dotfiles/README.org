@@ -1,0 +1,17 @@
+* What
+  Insall my dotfiles using ansible.
+* Why
+  I use these regularly.
+
+* Who
+  Myself.
+
+* When
+  When I install a new system.
+
+* Where
+  On the new system
+
+* How
+  Ansible.
+

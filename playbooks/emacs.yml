@@ -1,0 +1,143 @@
+# Install emacs from source using ansible
+#
+# Usage: ansible-playbook emacs.yml
+
+
+# The MIT License (MIT)
+# 
+# Copyright (c) 2015 George M Jones
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+---
+- hosts: all
+  user: root
+  vars:
+    secondsPerMinute: 60
+    secondsPerHour: 3600
+    secondsPerDay: 86400
+    secondsPerWeek: 604800
+
+  tasks:
+  - name: Install requied packages for which order does not matter
+    apt: pkg={{ item }} state=installed update_cache=true
+    with_items:
+      - git
+    tags:
+      - setup      
+    
+  - name: Setup | set postfix selections wtihout prompting
+    shell: echo postfix postfix/mailname string `hostname` | debconf-set-selections
+    register: firstSelection
+    tags:
+      - setup          
+
+  - name: Setup | second selection
+    when: firstSelection|success
+    shell: echo postfix postfix/main_mailer_type string 'No configuration' | debconf-set-selections
+    register: secondSelection
+    tags:
+      - setup          
+    
+  - name: Setup | install postfix
+    when: secondSelection|success
+    shell: apt-get install -y postfix
+    register: postfixInstalled
+    tags:
+      - setup          
+
+  - name: Setup | install build dependencies for emacs
+    when: postfixInstalled
+    command: apt-get -y build-dep emacs23
+    register: depends
+    tags:
+      - setup          
+
+# Pull emacs sources, but no more often than once a week
+    
+  - stat: path=~/git/emacs/ansible.emacs_source_pulled
+    register: pulled
+    become: no
+    tags:
+      - pull
+
+  - name: use file module to create a timestamp file for "now"
+    file: path="~/ansible.now" state=touch
+    tags:
+      - pull
+      
+  - stat: path=~/ansible.now
+    register: now
+    tags:
+      - pull    
+    
+  - name: Setup | pull latest emacs sources
+    when: depends|success and 
+          ((not pulled.stat.exists) or
+           (pulled.stat.exists and pulled.stat.mtime  + secondsPerWeek < now.stat.mtime))
+    git: repo=https://github.com/emacs-mirror/emacs.git accept_hostkey=true dest=~/git/emacs
+    register: src
+    become: no
+    tags:
+      - pull    
+
+  - name: Setup | remember when we last pulled emacs sources
+    file: path=~/git/emacs/ansible.emacs_source_pulled  state=touch
+    when: src|success and (not src|skipped)
+    become: no
+    tags:
+      - pull
+
+
+# build from source just pulled.  These take a while
+
+  - name: Setup | autogen
+    when: src|success
+    command: ./autogen.sh chdir=~/git/emacs
+    register: autogen
+    become: no
+    tags:
+      - build
+    
+
+  - name: Setup | configure
+    when: autogen|success
+    command: ./configure chdir=~/git/emacs
+    register: configure
+    become: no
+    tags:
+      - build
+
+  - name: Setup | bootstrap
+    when: configure|success
+    command: make bootstrap chdir=~/git/emacs
+    register: bootstrap
+    become: no
+    tags:
+      - build    
+
+
+# install
+
+  - name: Setup | install
+    when: bootstrap is not defined or bootstrap|success
+    command: sudo make install chdir=~/git/emacs
+    become: no
+    tags:
+      - install

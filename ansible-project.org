@@ -1,0 +1,41 @@
+* Ansible Action Items
+** Repo setup
+*** TODO Rename repo something more useful
+   - e.g. ansible-configs
+*** TODO reorganize repo
+   - ./roles for roles
+   - ./playbooks for playboks
+   - ./README.org
+** Playbooks and Roles to write
+*** TODO Finish emacs playbok
+*** TODO Write playbook to install latest org mode
+   - completely remove one installed with emacs?
+   - inhibit package from pulling down older versions from MELPA/ELPA?
+*** TODO Write playbook to "fix" ubuntu
+   - no ads
+   - ctrl key
+   - install things needed everywhere
+     + git
+   - Look at what I have on octo
+     =dpkg -l=
+   - Look at what I have on aolalyeh
+*** TODO Write playbook to install latex
+*** TODO Write role for mhn server
+** Systems to build
+*** TODO Build larger VM at home for testing
+    - I'm blowing out the default 8Gb just installing emacs
+      dependencies and source
+*** TODO Build "services" vm for home
+    - Base on server iso
+    - mhn server
+    - possibly local split horizon DNS
+*** TODO Build "client" vm for home
+    - Emacs
+    - Browsers, etc
+*** TODO install mhn honeypot server
+    - deploy a few MHN clients
+* Ansible Meetings
+  - "meeting" to include blog posts, etc.
+* Ansible Info
+  
+  

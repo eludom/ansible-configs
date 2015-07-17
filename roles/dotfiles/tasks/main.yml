@@ -1,0 +1,55 @@
+# Install my public dotfiles and other configuration files
+
+---
+- debug: msg="ntp_host {{ ntp_host }}"
+
+# Setup so we can pull things properly
+
+- name: copy .ssh/config file
+  copy: src=ssh-config dest=~/.ssh/config mode=0644
+
+- name: copy ssh key
+  copy: src=~/.ssh/20150604_ansible dest=~/.ssh/20150604_ansible mode=400
+
+
+# install dotfiles  
+
+- name: pull dotfiles repo
+  git: repo=git@github.com:eludom/dotfiles.git dest=~/git/github.com/eludom/dotfiles accept_hostkey=True
+  register: pullDotfiles
+  tags: pull  
+
+- name: install dotfiles
+  when: pullDotfiles|success
+  shell: ./install.sh chdir=~/git/github.com/eludom/dotfiles
+  tags: install
+
+
+# install emacs.d
+
+- name: pull .emacs.d repo
+  git: repo=git@github.com:eludom/.emacs.d.git dest=~/git/github.com/eludom/.emacs.d accept_hostkey=True
+  register: pullEmacsDotD
+  tags: pull
+
+- name: install dotfiles
+  when: pullEmacsDotD|success
+  shell: ./install.sh chdir=~/git/github.com/eludom/.emacs.d
+  tags: install
+
+
+# install elisp  
+
+- name: pull elisp repo
+  git: repo=git@github.com:eludom/elisp.git dest=~/git/github.com/eludom/elisp accept_hostkey=True
+  register: pullEmacsDotD
+  tags: pull
+
+- name: install dotfiles
+  when: pullEmacsDotD|success
+  shell: ./install.sh chdir=~/git/github.com/eludom/elisp
+  tags: install
+
+  
+  
+  

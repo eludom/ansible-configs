@@ -1,5 +1,5 @@
 #+TITLE: Ansible nginx example
-#+DATE: <2015-05-31 20:20:07 Sunday>
+#+DATE: <2015-06-01 20:54:10 Monday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -95,7 +95,7 @@
 
    #+RESULTS:
    #+begin_example
-   Sun May 31 17:53:30 EDT 2015
+   Mon Jun  1 18:30:46 EDT 2015
    + cd /home/george/ansible
    + ansible -i hosts.sshkeys web -m ping
    192.168.1.100 | success >> {
@@ -105,7 +105,7 @@
 
    + ansible -i hosts.sshkeys web -s -m shell -a date
    192.168.1.100 | success | rc=0 >>
-   Sun May 31 17:53:36 EDT 2015
+   Mon Jun  1 18:30:56 EDT 2015
 
    + ansible -i hosts.sshkeys web -s -m shell -a id
    192.168.1.100 | success | rc=0 >>

@@ -1,0 +1,20 @@
+---
+- debug: msg="ntp_host {{ ntp_host }}"
+
+- name: Install ntp and ntpdate
+  apt: pkg={{ item }} state=installed update_cache=false
+  with_items:
+    - ntp
+    - ntpdate
+
+- name: Stop NTP
+  service: name=ntp state=stopped enabled=yes
+  tags: ntp
+
+- name: -> set correct date
+  shell: /usr/sbin/ntpdate {{ ntp_host }}
+#  shell: /usr/sbin/ntpdate pool.ntp.org
+  ignore_errors: True
+  notify:
+    - Start NTP  
+  tags: ntp

@@ -1,0 +1,33 @@
+* What
+  This is a quick list of things I've searched for related to ansible.
+  
+* Why
+  This will keep track of useful information.
+
+* Who  
+
+* When
+  As I go along.
+
+* Where
+  In a file "answers.org" in my ansible configuration directory.
+  Stored on github as well.
+
+* How
+** Ansible ignore host keys
+  - Question :: https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8&client=ubuntu#safe=active&q=ansible%20ignore%20host%20keys
+  - Winning answer :: http://docs.ansible.com/intro_configuration.html#host-key-checking
+
+** Are ansible tasks execute in order?
+  - Question: https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8&client=ubuntu#safe=active&q=ansible%20order%20of%20tasks
+  - Answer : https://docs.ansible.com/playbooks_intro.html
+
+    #+begin_example
+    Tasks list
+
+    Each play contains a list of tasks. Tasks are executed in order, one
+    at a time, against all machines matched by the host pattern, before
+    moving on to the next task. It is important to understand that, within
+    a play, all hosts are going to get the same task directives. It is the
+    purpose of a play to map a selection of hosts to tasks. 
+    #+end_example

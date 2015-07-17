@@ -1,0 +1,33 @@
+---
+# Pull org sources
+    
+- name: Setup | pull latest org mode sources
+  git: repo=git://orgmode.org/org-mode.git accept_hostkey=true dest=~/git/orgmode.org/org-mode
+  register: haveSrc
+  become: no
+  tags:
+    - pull    
+
+# build from autoloads
+
+- name: Setup | make
+  when: haveSrc|success
+  command: make chdir=~/git/orgmode.org/org-mode
+  register: make
+  become: no
+  tags:
+    - make
+
+- name: Setup | make autoloads
+  when: make|success
+  command: make autoloads chdir=~/git/orgmode.org/org-mode
+  register: make
+  become: no
+  tags:
+    - make
+    
+
+# TODO 
+# - Figure out how to stop package-install from laoding org from melpa
+# - Install docsrings for the version of org that I build
+
