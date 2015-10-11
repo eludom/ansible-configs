@@ -1,5 +1,6 @@
+
 ---
-- hosts: gmj
+- hosts: yyy
   sudo: yes
     
   # Idempotent way to build a /etc/hosts file with Ansible using your Ansible hosts inventory for a source.
@@ -28,7 +29,7 @@
 # fix ctrl key system wide
 
   roles:
-    - ntp
-    - utils
+    - { role: ntp, tags: ["ntp"] }                
+    - { role: utils, tags: ["utils"] }            
 #    - { role: emacs, tags: ["emacs"] }    
-    - { role: dotfiles, tags: ["dotfiles"] }        
+#    - { role: dotfiles, tags: ["dotfiles"] }        

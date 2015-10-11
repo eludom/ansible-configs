@@ -3,7 +3,7 @@
 
 
 ---
-- hosts: gmj
+- hosts: server
   tasks:
   - name: Setup | mhn src
     git: repo=https://github.com/threatstream/mhn.git  accept_hostkey=true dest=/opt/mhn
