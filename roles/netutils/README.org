@@ -1,0 +1,17 @@
+* What
+  This is a set of netwkrking I find useful to install on Ubuntu systems.
+* Why
+  I use these regularly.
+
+* Who
+  Myself.
+
+* When
+  When I install a new system.
+
+* Where
+  On the new system
+
+* How
+  Ansible.
+

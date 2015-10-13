@@ -1,0 +1,29 @@
+---
+- name: Install | Utilities
+  apt: pkg={{ item }} state=installed update_cache=false
+  with_items:
+    - git
+    - gnutls-bin
+
+- name: "Build hosts file"
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present
+  when: hostvars[item].ansible_default_ipv4.address is defined
+  with_items: groups['all']      
+  tags:
+    - setup
+
+- name: Install | create directory for fixctrl script
+  file: path=/home/george/bin state=directory    
+
+- name: Install | copy fixctrl script
+  copy: src=/home/george/bin/fixctrl.sh dest=/home/george/bin/fixctrl.sh mode=755
+  tags:  
+      - fixctrl
+
+- name: "Fix ctrl key system-wide"
+  lineinfile: dest=/etc/bash.bashrc line='if [ -n "$DISPLAY" ]; then /usr/bin/setxkbmap -option 'ctrl:nocaps' ; fi' state=present
+  tags:
+    - fixctrl
+        
+    
+    

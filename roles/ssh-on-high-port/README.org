@@ -1,0 +1,18 @@
+* What
+  Install SSH on a high port
+* Why
+  Two reasons: 1) obscurity for the real SSH port 2) ability to part
+  "something else" on 22.
+
+* Who
+  Myself.
+
+* When
+  When I install a new system.
+
+* Where
+  On the new system
+
+* How
+  Ansible.
+

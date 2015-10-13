@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-06-02 07:00:22 Tuesday>
+#+DATE: <2015-10-11 13:27:31 Sunday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -745,3 +745,7 @@ END
 
 #+end_example
 
+
+* Note <2015-10-11 Sun>
+  This directory used to contain ansible/ pulled from:
+  git@github.com:Servers-for-Hackers/ansible-basic-server.git

@@ -1,0 +1,18 @@
+* What
+  This is a set of things I find useful to install on Ubuntu desktop
+  sytems for general purpose usage. 
+* Why
+  I use these regularly.
+
+* Who
+  Myself.
+
+* When
+  When I install a new system.
+
+* Where
+  On the new system
+
+* How
+  Ansible.
+

@@ -1,0 +1,17 @@
+
+---
+- name: Install | ssh-server on high port
+  apt: pkg=openssh-server state=installed update_cache=false
+  register: installed
+
+- name: Configure | change port in /etc/ssh/sshd
+  lineinfile: dest=/etc/ssh/sshd_config line="port 2468"
+
+- name: Stop ssh
+  service: name=ssh state=stopped enabled=yes
+  tags: stop
+
+- name: Stop ssh
+  service: name=ssh state=stopped enabled=yes
+  tags: stop
+  
