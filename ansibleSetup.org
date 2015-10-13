@@ -1,5 +1,5 @@
 #+TITLE: Ansible Installation and SSH Client setup
-#+DATE: <2015-06-03 19:43:45 Wednesday>
+#+DATE: <2015-06-04 15:36:21 Thursday>
 #+AUTHOR: George M Jones
 #+EMAIL: gmj@pobox.com
 
@@ -23,16 +23,23 @@
   - One time setup per client
 
 * Where
-  - Brand new Ubuntu 14.04.2 (which may date this going forward) VM
-    running on my "lab" at home.   Will probably build up "roles" to
-    install all my usual suspects, stick the configs on github, and
-    use Ansible-ized machines going forward.
-  - May move to EC2 instances later
+  - Ansible "master" on an Ubuntu 14.04 system (could be something else).
+  - Configured systems reachable via SSH (VMWare, EC2, etc)
+  - Roles and playbooks pushed to github
 
 * How
-  - Start with a freshly installed Ubuntu 14.04 system on client
+  The goal here is to set up ssh credentials that allow ansible to
+  have root SSH access to the target systems.
 
-** Set Org Variables						   :noexport:
+  There are two basic scenarios:
+
+  1. No existing ssh root access.  In this case, we have to start with
+     password authentication, create an SSH key, push it out, and create
+     an ansible users on the remote system 
+
+  2. Already have root ssh access.  Use existing credentials.
+
+** Set Org Variables 						   :noexport:
 
    password stores the password to use before ssh keys and accounts
    are set up.
