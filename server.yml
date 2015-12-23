@@ -1,0 +1,22 @@
+---
+- hosts: 
+    - server
+#    - client
+  sudo: yes
+
+# Not quite working.  Sets each host name to server, then client....
+
+  tasks:
+  - name: "Set hostname"
+    hostname: name=server
+    tags:
+      - setup
+
+# fix ctrl key system wide
+
+#  roles:
+#     - { role: ntp, tags: ["ntp"] }                
+#     - { role: utils, tags: ["utils"] }
+#     - { role: netutils, tags: ["netutils"] }                
+#    - { role: emacs, tags: ["emacs"] }    
+#    - { role: dotfiles, tags: ["dotfiles"] }        

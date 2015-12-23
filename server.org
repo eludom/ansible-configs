@@ -1,0 +1,219 @@
+#+TITLE: Run commands on yyy set to set up server
+#+DATE: <2015-06-21 20:11:00 Sunday>
+#+AUTHOR: George M Jones
+#+EMAIL: gmj@pobox.com
+
+* What
+  Run commands on yyy via ansible to set up baseline
+
+* Why
+  Testing ansible, my developing roles.
+
+* Who
+  Me
+
+* When
+  - After installing basic Ubuntu serer
+  - After apt-get update, apt-get upgrade
+  - After installing virtual box additions
+  - After installing basic ansible SSH keys and doing account setup
+  - Before taking a snapshot to use as a base disk
+
+* Where
+  - Brand new Ubuntu server 14.04.2 (which may date this going
+    forward) VM running on my "lab" at home.  Will probably build up
+    "roles" to install all my usual suspects, stick the configs on
+    github, and use Ansible-ized machines going forward.
+  - May move to EC2 instances later
+
+* How
+  - Start with a freshly installed Ubuntu 14.04 server system
+
+** Set Org Variables						   :noexport:
+
+   password stores the password to use before ssh keys and accounts
+   are set up.
+   
+   #+NAME: password
+   | changethis |
+
+   ansibleDir stores the full path name
+
+   #+NAME: ansibleDir
+   #+begin_src sh  :results output :exports both
+   pwd
+   #+end_src
+
+   #+RESULTS: ansibleDir
+   : /home/george/ansible-configs
+
+   sshKeyName is the base name of the ssh key.
+
+   #+NAME: sshKeyName
+   | ~/.ssh/20150604_ansible       |
+
+   =sshUser= is the ssh user to log in as
+
+   #+NAME: sshUser
+   | ubuntu |
+
+   =sshHost= is the name or IP of an SSH host
+
+   #+NAME: sshHost
+   | 10.0.0.101 |
+
+
+** Variables
+
+   The scripts below use the following variables.  Your mileage may
+   vary.   Source this if executing the scripts below.
+
+   #+begin_src sh  :results output :exports results  :var ansibleDir=ansibleDir sshKeyName=sshKeyName password=password sshUser=sshUser sshHost=sshHost
+   exec 2>&1;set -e; set -u; set +x; echo "# `date`"
+   echo export password=${password}
+   echo export ansibleDir=${ansibleDir}
+   echo export sshKeyName=${sshKeyName}
+   echo export sshUser=${sshUser}
+   echo export sshHost=${sshHost}
+   #+end_src
+
+   #+RESULTS:
+   : # Sun Jun 21 08:23:32 EDT 2015
+   : export password=changethis
+   : export ansibleDir=/home/george/git/github.com/eludom/ansible-configs
+   : export sshKeyName=~/.ssh/20150604_ansible
+   : export sshUser=ubuntu
+   : export sshHost=10.0.0.102
+
+** DONE Run ansible ping using ssh credentials
+   #+begin_src sh  :results output :exports both :var ansibleDir=ansibleDir
+   exec 2>&1;set -e; set -u; set -x; echo '#' `date;`
+   cd $ansibleDir
+   ansible -i hosts.sshkeys all -m ping || true
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   ++ date
+   + echo '#' Sun Jun 21 06:22:57 EDT 2015
+   # Sun Jun 21 06:22:57 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
+   + ansible -i hosts.sshkeys all -m ping
+   yyy | success >> {
+       "changed": false, 
+       "ping": "pong"
+   }
+
+#+end_example
+
+
+*** DONE Run common setup on all hosts
+   #+begin_src sh  :results output :exports both  :var ansibleDir=ansibleDir
+   exec 2>&1;date;set -e; set -u; set -x
+
+   cd $ansibleDir
+   pwd
+   ansible-playbook -i hosts.sshkeys  server.yml -t setup || true
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   Sun Jun 21 20:01:45 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
+   + pwd
+   /home/george/git/github.com/eludom/ansible-configs
+   + ansible-playbook -i hosts.sshkeys server.yml -t setup
+
+   PLAY [server;client] ********************************************************** 
+
+   GATHERING FACTS *************************************************************** 
+   ok: [server]
+   ok: [client]
+
+   TASK: [Build hosts file] ****************************************************** 
+   changed: [client] => (item=server)
+   changed: [client] => (item=client)
+   ok: [server] => (item=server)
+   changed: [server] => (item=client)
+
+   TASK: [Set hostname] ********************************************************** 
+   changed: [server] => (item=server)
+   changed: [server] => (item=client)
+   changed: [client] => (item=server)
+   changed: [client] => (item=client)
+
+   PLAY RECAP ******************************************************************** 
+   client                     : ok=3    changed=2    unreachable=0    failed=0   
+   server                     : ok=3    changed=2    unreachable=0    failed=0   
+
+#+end_example
+
+ 
+
+
+   
+*** DONE Run playbook commands to utilities, only on yyy
+
+   #+begin_src sh  :results output :exports both  :var ansibleDir=ansibleDir
+   exec 2>&1;date;set -e; set -u; set -x
+
+   cd $ansibleDir
+   ansible-playbook -i hosts.sshkeys yyy.yml -t utils || true
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   Sun Jun 21 06:53:36 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
+   + ansible-playbook -i hosts.sshkeys yyy.yml -t utils
+
+   PLAY [yyy] ******************************************************************** 
+
+   GATHERING FACTS *************************************************************** 
+   ok: [yyy]
+
+   TASK: [utils | Install | Utilities] ******************************************* 
+   ok: [yyy] => (item=git,gnutls-bin)
+
+   TASK: [utils | Install | create directory for fixctrl script] ***************** 
+   ok: [yyy]
+
+   TASK: [utils | Install | copy fixctrl script] ********************************* 
+   changed: [yyy]
+
+   TASK: [utils | Fix ctrl key system-wide] ************************************** 
+   ok: [yyy]
+
+   PLAY RECAP ******************************************************************** 
+   yyy                        : ok=5    changed=1    unreachable=0    failed=0   
+
+#+end_example
+
+ *** DONE Run playbook commands to install network utilities, only on yyy
+   #+begin_src sh  :results output :exports both  :var ansibleDir=ansibleDir
+   exec 2>&1;date;set -e; set -u; set -x
+
+   cd $ansibleDir
+   ansible-playbook -i hosts.sshkeys yyy.yml -t netutils || true
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   Sun Jun 21 06:55:24 EDT 2015
+   + cd /home/george/git/github.com/eludom/ansible-configs
+   + ansible-playbook -i hosts.sshkeys yyy.yml -t netutils
+
+   PLAY [yyy] ******************************************************************** 
+
+   GATHERING FACTS *************************************************************** 
+   ok: [yyy]
+
+   TASK: [netutils | Install | Networking Utilities] ***************************** 
+   changed: [yyy] => (item=nmap,tshark,traceroute)
+
+   PLAY RECAP ******************************************************************** 
+   yyy                        : ok=2    changed=1    unreachable=0    failed=0   
+
+#+end_example
+
+ 

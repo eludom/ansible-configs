@@ -1,0 +1,7 @@
+# Install modern honey nework server
+---
+- hosts: gmj
+
+  roles:
+    - { role: ssh-on-hig-port, tags: ["sshHigh"] }                      
+

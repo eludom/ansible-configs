@@ -1,0 +1,29 @@
+---
+- hosts: 
+    - server 
+    - client
+  sudo: yes
+    
+#  tasks:  
+#  - name: "Build hosts file"
+#    lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present
+#    when: hostvars[item].ansible_default_ipv4.address is defined
+#    with_items: groups['all']      
+#    tags:
+#      - setup
+#
+#  - name: "Set hostname"
+#    hostname: name={{item}}
+#    with_items: groups['all']      
+#    tags:
+#      - setup
+
+# fix ctrl key system wide
+
+  roles:
+
+     - { role: utils, tags: ["utils"] }
+#     - { role: ntp, tags: ["ntp"] }                
+#     - { role: netutils, tags: ["netutils"] }                
+#    - { role: emacs, tags: ["emacs"] }    
+#    - { role: dotfiles, tags: ["dotfiles"] }        
